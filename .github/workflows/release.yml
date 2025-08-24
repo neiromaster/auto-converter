@@ -57,6 +57,13 @@ jobs:
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "Release tag will be: $TAG_NAME"
 
+      - name: Calculate auto-converter.ps1 SHA256
+        id: calculate_hash
+        run: |
+          HASH=$(sha256sum auto-converter.ps1 | awk '{print $1}')
+          echo "SCRIPT_SHA256=$HASH" >> $GITHUB_ENV
+          echo "Calculated SHA256: $HASH"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -64,6 +71,7 @@ jobs:
           name: Release ${{ env.TAG_NAME }}
           body: |
             Automated release for version ${{ env.TAG_NAME }}
+            SHA256: ${{ env.SCRIPT_SHA256 }}
           files: |
             auto-converter.ps1
         env:
