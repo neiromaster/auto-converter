@@ -138,7 +138,7 @@ try {
 
     if (Test-Path -LiteralPath `$TempUpdatePath) {
         Write-UpdaterLog "Перемещаем новый скрипт: `$TempUpdatePath -> `$CurrentScriptPath"
-        Rename-Item -Path `$TempUpdatePath -NewName `$CurrentScriptPath -Force -ErrorAction Stop
+        Move-Item -Path `$TempUpdatePath -Destination `$CurrentScriptPath -Force -ErrorAction Stop
     } else {
         throw "Временный файл обновления не найден: `$TempUpdatePath"
     }
