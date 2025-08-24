@@ -1,0 +1,68 @@
+name: Create GitHub Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get current date and month
+        id: date
+        run: |
+          echo "YEAR=$(date +'%y')" >> $GITHUB_OUTPUT
+          echo "MONTH=$(date +'%m')" >> $GITHUB_OUTPUT
+
+      - name: Get latest patch number for current month
+        id: get_patch
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { YEAR, MONTH } = process.env;
+            const tagPrefix = `v${YEAR}.${MONTH}.`;
+            let patch = 0;
+
+            const releases = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            for (const release of releases.data) {
+              if (release.tag_name.startsWith(tagPrefix)) {
+                const currentPatch = parseInt(release.tag_name.split('.').pop());
+                if (!isNaN(currentPatch) && currentPatch > patch) {
+                  patch = currentPatch;
+                }
+              }
+            }
+            patch++; // Increment for the new release
+            console.log(`Calculated patch: ${patch}`);
+            core.setOutput('patch', patch);
+        env:
+          YEAR: ${{ steps.date.outputs.YEAR }}
+          MONTH: ${{ steps.date.outputs.MONTH }}
+
+      - name: Create Release Tag
+        id: create_tag
+        run: |
+          TAG_NAME="v${{ steps.date.outputs.YEAR }}.${{ steps.date.outputs.MONTH }}.${{ steps.get_patch.outputs.patch }}"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          echo "Release tag will be: $TAG_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: Release ${{ env.TAG_NAME }}
+          body: |
+            Automated release for version ${{ env.TAG_NAME }}
+          files: |
+            auto-converter.ps1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
