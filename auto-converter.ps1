@@ -96,11 +96,12 @@ function Check-ForUpdates {
 
         Write-Log "🔄 Хэш скрипта в последнем релизе: $LatestReleaseHash"
 
+        $TempUpdatePath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter.ps1.new"
+
         if ($CurrentScriptHash -ne $LatestReleaseHash) {
             Write-Log "🔄 Доступна новая версия. Применяем обновление..."
             $DownloadUrl = $LatestRelease.assets | Where-Object { $_.name -eq "auto-converter.ps1" } | Select-Object -ExpandProperty browser_download_url
 
-            $TempUpdatePath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter.ps1.new"
             if ($DownloadUrl) {
                 Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempUpdatePath -TimeoutSec 30
 
