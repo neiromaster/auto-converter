@@ -100,8 +100,8 @@ function Check-ForUpdates {
             Write-Log "🔄 Доступна новая версия. Применяем обновление..."
             $DownloadUrl = $LatestRelease.assets | Where-Object { $_.name -eq "auto-converter.ps1" } | Select-Object -ExpandProperty browser_download_url
 
+            $TempUpdatePath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter.ps1.new"
             if ($DownloadUrl) {
-                $TempUpdatePath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter.ps1.new"
                 Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempUpdatePath -TimeoutSec 30
 
                 Write-Log "🔄 Обновление загружено в $TempUpdatePath. Применение обновления..."
