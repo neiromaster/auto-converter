@@ -43,9 +43,10 @@ jobs:
                 }
               }
             }
-            patch++; // Increment for the new release
-            console.log(`Calculated patch: ${patch}`);
-            core.setOutput('patch', patch);
+            patch++;
+            const formattedPatch = patch < 10 ? `0${patch}` : `${patch}`;
+            console.log(`Calculated patch: ${formattedPatch}`);
+            core.setOutput('patch', formattedPatch);
         env:
           YEAR: ${{ steps.date.outputs.YEAR }}
           MONTH: ${{ steps.date.outputs.MONTH }}
