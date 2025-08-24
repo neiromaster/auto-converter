@@ -77,7 +77,7 @@ $GitHubRepoName = "auto-converter"
 
 function Check-ForUpdates {
     Write-Log "🔄 Проверяем обновление..."
-    $CurrentScriptPath = $MyInvocation.MyCommand.Definition
+    $CurrentScriptPath = $MyInvocation.PSCommandPath
     $ApiUrl = "https://api.github.com/repos/$GitHubRepoOwner/$GitHubRepoName/releases/latest"
 
     try {
@@ -121,14 +121,17 @@ Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$CurrentScriptPat
                 Write-Log "🔄 Перезапуск для применения обновления..."
                 Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`"" -WindowStyle Hidden
                 exit # Exit the current script
-            } else {
+            }
+            else {
                 Write-Log "❌ Ошибка: Не удалось найти auto-converter.ps1 в последней версии."
             }
-        } else {
+        }
+        else {
             Write-Log "🔄 Скрипт обновлён."
             Remove-Item -Path $TempUpdatePath -ErrorAction SilentlyContinue # Clean up temp file
         }
-    } catch {
+    }
+    catch {
         Write-Log "❌ Ошибка обновления: $_"
     }
 }
