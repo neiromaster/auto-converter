@@ -148,7 +148,7 @@ try {
     }
 
     Write-UpdaterLog "Обновление завершено. Перезапуск скрипта..."
-    Start-Process powershell.exe -ArgumentList "-NoProfile -File `"`$CurrentScriptPath`"" -WindowStyle Hidden
+    Start-Process powershell.exe -ArgumentList "-NoProfile -File `"`$CurrentScriptPath`""
     exit 0
 }
 catch {
@@ -483,3 +483,5 @@ finally {
     $Watcher.Dispose()
     Write-Log "🛑 Мониторинг остановлен."
 }
+
+
