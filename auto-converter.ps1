@@ -2,7 +2,75 @@
     [string]$EnvFile = ".env"
 )
 
-# --- Auto-Update Configuration ---
+# === Загрузка .env ===
+if (-not (Test-Path $EnvFile)) {
+    Write-Error "❌ Файл конфигурации не найден: $EnvFile"
+    exit 1
+}
+
+$env:PS_ENV_LOADED = "true"
+
+Get-Content $EnvFile | ForEach-Object {
+    $line = $_.Trim()
+    if ($line -and $line[0] -ne '#' -and $line -match '^\s*([^=]+)=(.*)') {
+        $key = $matches[1].Trim()
+        $value = $matches[2].Trim().Replace('"', '\"')
+        $value = [System.Environment]::ExpandEnvironmentVariables($value)
+        Set-Variable -Name $key -Value $value -Scope Script
+    }
+}
+
+# === Преобразование типов и валидация ===
+try {
+    $MinFileSizeMB = [int]$MIN_FILE_SIZE_MB
+    $StabilizationCheckIntervalSec = [int]$STABILIZATION_CHECK_INTERVAL_SEC
+    $StabilizationTimeoutSec = [int]$STABILIZATION_TIMEOUT_SEC
+    $StabilizationToleranceBytes = [int]$STABILIZATION_TOLERANCE_BYTES
+    $TelegramEnabled = [bool]::Parse($TELEGRAM_ENABLED.ToLower())
+    $UseFileSizeStabilization = [bool]::Parse($USE_FILE_SIZE_STABILIZATION.ToLower())
+    $LogEnabled = [bool]::Parse($LOG_ENABLED.ToLower())
+}
+catch {
+    Write-Error "❌ Ошибка парсинга настроек: $_"
+    exit 1
+}
+
+$SourceFolder = $SOURCE_FOLDER
+$TargetFolder = $TARGET_FOLDER
+$TempFolder = $TEMP_FOLDER
+$Prefix = $PREFIX
+$IgnorePrefix = $IGNORE_PREFIX
+$FFmpegPath = $FFMPEG_PATH
+$VideoExtensions = $VIDEO_EXTENSIONS -split ',' | ForEach-Object { $_.Trim() }
+$TelegramBotToken = $TELEGRAM_BOT_TOKEN
+$TelegramChannelId = $TELEGRAM_CHANNEL_ID
+$LogFile = $LOG_FILE
+
+# === Проверка путей ===
+foreach ($path in $SourceFolder, $TargetFolder, $TempFolder) {
+    if (-not (Test-Path $path)) {
+        Write-Error "❌ Путь не существует: $path"
+        exit 1
+    }
+}
+
+# Проверка FFmpeg
+if (-not (Test-Path $FFmpegPath)) {
+    Write-Error "❌ FFmpeg не найден: $FFmpegPath"
+    exit 1
+}
+
+# === Логирование ===
+function Write-Log {
+    param([string]$Message)
+    if ($LogEnabled) {
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        "$timestamp | $Message" | Out-File -FilePath $LogFile -Append -Encoding UTF8
+    }
+    Write-Host $Message
+}
+
+# === Auto-Update Configuration ===
 
 $GitHubRepoOwner = "neiromaster"
 $GitHubRepoName = "auto-converter"
@@ -65,78 +133,7 @@ Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$CurrentScriptPat
     }
 }
 
-# === 1. Загрузка .env ===
-if (-not (Test-Path $EnvFile)) {
-    Write-Error "❌ Файл конфигурации не найден: $EnvFile"
-    exit 1
-}
-
-$env:PS_ENV_LOADED = "true"
-
-Get-Content $EnvFile | ForEach-Object {
-    $line = $_.Trim()
-    if ($line -and $line[0] -ne '#' -and $line -match '^\s*([^=]+)=(.*)') {
-        $key = $matches[1].Trim()
-        $value = $matches[2].Trim().Replace('"', '\"')
-        $value = [System.Environment]::ExpandEnvironmentVariables($value)
-        Set-Variable -Name $key -Value $value -Scope Script
-    }
-}
-
-# === 2. Преобразование типов и валидация ===
-try {
-    $MinFileSizeMB = [int]$MIN_FILE_SIZE_MB
-    $StabilizationCheckIntervalSec = [int]$STABILIZATION_CHECK_INTERVAL_SEC
-    $StabilizationTimeoutSec = [int]$STABILIZATION_TIMEOUT_SEC
-    $StabilizationToleranceBytes = [int]$STABILIZATION_TOLERANCE_BYTES
-    $TelegramEnabled = [bool]::Parse($TELEGRAM_ENABLED.ToLower())
-    $UseFileSizeStabilization = [bool]::Parse($USE_FILE_SIZE_STABILIZATION.ToLower())
-    $LogEnabled = [bool]::Parse($LOG_ENABLED.ToLower())
-}
-catch {
-    Write-Error "❌ Ошибка парсинга настроек: $_"
-    exit 1
-}
-
-$SourceFolder = $SOURCE_FOLDER
-$TargetFolder = $TARGET_FOLDER
-$TempFolder = $TEMP_FOLDER
-$Prefix = $PREFIX
-$IgnorePrefix = $IGNORE_PREFIX
-$FFmpegPath = $FFMPEG_PATH
-$VideoExtensions = $VIDEO_EXTENSIONS -split ',' | ForEach-Object { $_.Trim() }
-$TelegramBotToken = $TELEGRAM_BOT_TOKEN
-$TelegramChannelId = $TELEGRAM_CHANNEL_ID
-$LogFile = $LOG_FILE
-
-# === 3. Проверка путей ===
-foreach ($path in $SourceFolder, $TargetFolder, $TempFolder) {
-    if (-not (Test-Path $path)) {
-        Write-Error "❌ Путь не существует: $path"
-        exit 1
-    }
-}
-
-# Проверка FFmpeg
-if (-not (Test-Path $FFmpegPath)) {
-    Write-Error "❌ FFmpeg не найден: $FFmpegPath"
-    exit 1
-}
-
-# --- Check for updates ---
-Check-ForUpdates
-
-# === 4. Логирование ===
-function Write-Log {
-    param([string]$Message)
-    if ($LogEnabled) {
-        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        "$timestamp | $Message" | Out-File -FilePath $LogFile -Append -Encoding UTF8
-    }
-    Write-Host $Message
-}
-
-# === 5. Telegram ===
+# === Telegram ===
 function Send-TelegramMessage {
     param([string]$Message)
 
@@ -166,7 +163,7 @@ function Send-TelegramMessage {
     }
 }
 
-# === 6. Функция: стабилизация размера ===
+# === Функция: стабилизация размера ===
 function Test-FileSizeStable {
     param([string]$Path)
     $StartTime = Get-Date
@@ -202,7 +199,7 @@ function Test-FileSizeStable {
     return $true
 }
 
-# === 7. Функция: определение декодера ===
+# === Функция: определение декодера ===
 function Get-FfmpegConversionStrategy {
     [CmdletBinding()]
     param(
@@ -243,7 +240,7 @@ function Get-FfmpegConversionStrategy {
 }
 
 
-# === 8. Конвертация с прогрессом и CUDA ===
+# === Конвертация с прогрессом и CUDA ===
 function Convert-VideoWithProgress {
     param([string]$InputFile, [string]$OutputFile, [string]$DecoderCommand = $null)
 
@@ -318,7 +315,10 @@ function Convert-VideoWithProgress {
     return $proc.ExitCode -eq 0
 }
 
-# === 9. Основной обработчик события ===
+# --- Проверка обновления ---
+Check-ForUpdates
+
+# === Основной обработчик события ===
 $Action = {
     $FilePath = $Event.SourceEventArgs.FullPath
     $FileName = $Event.SourceEventArgs.Name
@@ -401,7 +401,7 @@ $Action = {
 }
 
 
-# === 10. Запуск мониторинга ===
+# === Запуск мониторинга ===
 Write-Log "✅ Мониторинг запущен: $SourceFolder"
 Write-Log "Нажмите Ctrl+C для остановки."
 
@@ -423,3 +423,4 @@ finally {
     $Watcher.Dispose()
     Write-Log "🛑 Мониторинг остановлен."
 }
+
