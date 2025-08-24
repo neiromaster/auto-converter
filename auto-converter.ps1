@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$EnvFile = ".env"
 )
 
@@ -233,7 +233,7 @@ function Get-FfmpegConversionStrategy {
         Write-Log "🛠  Будет использован программный декодер."
     }
 
-    return [PSCustomObject]@{
+    return [PSCustomObject]@{ 
         DecoderCommand = $decoderCommand
         VideoCodec     = $codec
     }
@@ -357,7 +357,7 @@ $Action = {
     Send-TelegramMessage -Message $msg.Trim()
                 
     if ($FileSizeMB -lt $MinFileSizeMB) {
-        Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName"
+        Write-Log "📉 Маленький файл ($("{0:F1}" -f $FileSizeMB) МБ): $FileName"
         return
     }
 
@@ -379,7 +379,7 @@ $Action = {
                 if (Test-Path -LiteralPath $FinalOutput) { Remove-Item -LiteralPath $FinalOutput -Force }
                 Move-Item -LiteralPath $TempOutput $FinalOutput -Force
                 $FinalSizeMB = (Get-Item -LiteralPath $FinalOutput).Length / 1MB
-                Write-Log "✅✅✅ Готово: $OutputFileName ($('{0:F1}' -f $FinalSizeMB) МБ)"
+                Write-Log "✅✅✅ Готово: $OutputFileName ($("{0:F1}" -f $FinalSizeMB) МБ)"
 
                 $msg = "
 🎬 <b>Видео обработано</b>
@@ -423,4 +423,3 @@ finally {
     $Watcher.Dispose()
     Write-Log "🛑 Мониторинг остановлен."
 }
-
