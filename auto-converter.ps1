@@ -149,7 +149,7 @@ try {
     }
 
     Write-UpdaterLog "Обновление завершено. Перезапуск скрипта..."
-    Start-Process pwsh.exe -ArgumentList "-NoProfile -File `"`$CurrentScriptPath`""
+    Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "`"`$CurrentScriptPath`""
     exit 0
 }
 catch {
