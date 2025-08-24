@@ -148,7 +148,7 @@ try {
     }
 
     Write-UpdaterLog "Обновление завершено. Перезапуск скрипта..."
-    Start-Process powershell.exe -ArgumentList "-NoProfile -File `"`$CurrentScriptPath`""
+    Start-Process pwsh.exe -ArgumentList "-NoProfile -File `"`$CurrentScriptPath`""
     exit 0
 }
 catch {
@@ -176,7 +176,7 @@ finally {
 
                 Write-Log "🔄 Перезапуск для применения обновления..."
                 # Pass parameters to the updater script
-                Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`" -CurrentScriptPath `"$CurrentScriptPath`" -TempUpdatePath `"$TempUpdatePath`"" -WindowStyle Hidden
+                Start-Process pwsh.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`" -CurrentScriptPath `"$CurrentScriptPath`" -TempUpdatePath `"$TempUpdatePath`"" -WindowStyle Hidden
                 exit # Exit the current script
             }
             else {
