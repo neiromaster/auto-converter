@@ -90,7 +90,6 @@ function Check-ForUpdates {
 
         if (-not $LatestReleaseHash) {
             Write-Log "⚠ Предупреждение: хеш SHA256 не найден в теле последнего релиза. Невозможно выполнить проверку обновлений на основе содержимого."
-            # Fallback to version-based check or just exit if no hash is found
             return
         }
 
@@ -107,9 +106,7 @@ function Check-ForUpdates {
 
                 Write-Log "🔄 Обновление загружено в $TempUpdatePath. Применение обновления..."
 
-                # Prepare the updater script content
                 $UpdateScriptContent = @"
-# This script runs in a new PowerShell process
 param(
     [string]`$CurrentScriptPath,
     [string]`$TempUpdatePath
@@ -176,9 +173,8 @@ finally {
                 $UpdateScriptContent | Out-File $TempUpdaterPath -Encoding UTF8
 
                 Write-Log "🔄 Перезапуск для применения обновления..."
-                # Pass parameters to the updater script
                 Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "$TempUpdaterPath", "-CurrentScriptPath", "$CurrentScriptPath", "-TempUpdatePath", "$TempUpdatePath"
-                exit # Exit the current script
+                exit
             }
             else {
                 Write-Log "❌ Ошибка: Не удалось найти auto-converter.ps1 в последней версии."
@@ -186,7 +182,7 @@ finally {
         }
         else {
             Write-Log "🔄 Скрипт обновлён."
-            Remove-Item -Path $TempUpdatePath -ErrorAction SilentlyContinue # Clean up temp file
+            Remove-Item -Path $TempUpdatePath -ErrorAction SilentlyContinue
         }
     }
     catch {
