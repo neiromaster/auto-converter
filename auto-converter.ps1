@@ -106,20 +106,77 @@ function Check-ForUpdates {
 
                 Write-Log "🔄 Обновление загружено в $TempUpdatePath. Применение обновления..."
 
-                # Self-replacement logic (remains the same)
+                # Prepare the updater script content
                 $UpdateScriptContent = @"
-Start-Sleep -Seconds 2
-Rename-Item -Path "$CurrentScriptPath" -NewName "$CurrentScriptPath.old" -Force
-Rename-Item -Path "$TempUpdatePath" -NewName "$CurrentScriptPath" -Force
-Remove-Item -Path "$CurrentScriptPath.old" -Force -ErrorAction SilentlyContinue
-Write-Host "🔄 Обновление завершено. Перезапуск скрипта..."
-Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$CurrentScriptPath`""
+# This script runs in a new PowerShell process
+param(
+    [string]`$CurrentScriptPath,
+    [string]`$TempUpdatePath
+)
+
+function Write-UpdaterLog {
+    param([string]`$Message)
+    `$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "`$timestamp | UPDATER | `$Message" | Out-File -FilePath (Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter-updater.log") -Append -Encoding UTF8
+    Write-Host `$Message
+}
+
+Write-UpdaterLog "Начинаем применение обновления..."
+
+try {
+    Start-Sleep -Seconds 2
+
+    `$OldScriptBackupPath = "`$CurrentScriptPath.old"
+
+    if (Test-Path -LiteralPath `$CurrentScriptPath) {
+        Write-UpdaterLog "Перемещаем текущий скрипт в резервную копию: `$OldScriptBackupPath"
+        Rename-Item -Path `$CurrentScriptPath -NewName `$OldScriptBackupPath -Force -ErrorAction Stop
+    } else {
+        Write-UpdaterLog "Текущий скрипт не найден по пути: `$CurrentScriptPath. Возможно, уже был перемещен или удален."
+    }
+
+    if (Test-Path -LiteralPath `$TempUpdatePath) {
+        Write-UpdaterLog "Перемещаем новый скрипт: `$TempUpdatePath -> `$CurrentScriptPath"
+        Rename-Item -Path `$TempUpdatePath -NewName `$CurrentScriptPath -Force -ErrorAction Stop
+    } else {
+        throw "Временный файл обновления не найден: `$TempUpdatePath"
+    }
+
+    if (Test-Path -LiteralPath `$OldScriptBackupPath) {
+        Write-UpdaterLog "Удаляем старую резервную копию: `$OldScriptBackupPath"
+        Remove-Item -Path `$OldScriptBackupPath -Force -ErrorAction SilentlyContinue
+    }
+
+    Write-UpdaterLog "Обновление завершено. Перезапуск скрипта..."
+    Start-Process powershell.exe -ArgumentList "-NoProfile -File `"`$CurrentScriptPath`"" -WindowStyle Hidden
+    exit 0
+}
+catch {
+    Write-UpdaterLog "ОШИБКА ПРИМЕНЕНИЯ ОБНОВЛЕНИЯ: `$(_.Exception.Message)"
+    if (Test-Path -LiteralPath `$OldScriptBackupPath -and -not (Test-Path -LiteralPath `$CurrentScriptPath)) {
+        Write-UpdaterLog "Попытка отката: восстанавливаем старый скрипт из резервной копии."
+        try {
+            Rename-Item -Path `$OldScriptBackupPath -NewName `$CurrentScriptPath -Force -ErrorAction Stop
+            Write-UpdaterLog "Откат успешно выполнен."
+        }
+        catch {
+            Write-UpdaterLog "КРИТИЧЕСКАЯ ОШИБКА ОТКАТА: `$(_.Exception.Message). Возможно, потребуется ручное восстановление."
+        }
+    }
+    exit 1
+}
+finally {
+    if (Test-Path -LiteralPath `$TempUpdatePath) {
+        Remove-Item -Path `$TempUpdatePath -Force -ErrorAction SilentlyContinue
+    }
+}
 "@
                 $TempUpdaterPath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter-updater.ps1"
                 $UpdateScriptContent | Out-File $TempUpdaterPath -Encoding UTF8
 
                 Write-Log "🔄 Перезапуск для применения обновления..."
-                Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`"" -WindowStyle Hidden
+                # Pass parameters to the updater script
+                Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`" -CurrentScriptPath `"$CurrentScriptPath`" -TempUpdatePath `"$TempUpdatePath`"" -WindowStyle Hidden
                 exit # Exit the current script
             }
             else {
