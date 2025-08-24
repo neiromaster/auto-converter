@@ -177,7 +177,7 @@ finally {
 
                 Write-Log "🔄 Перезапуск для применения обновления..."
                 # Pass parameters to the updater script
-                Start-Process pwsh.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`" -CurrentScriptPath `"$CurrentScriptPath`" -TempUpdatePath `"$TempUpdatePath`""
+                Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "`"$TempUpdaterPath`"", "-CurrentScriptPath", "`"$CurrentScriptPath`"", "-TempUpdatePath", "`"$TempUpdatePath`""
                 exit # Exit the current script
             }
             else {
