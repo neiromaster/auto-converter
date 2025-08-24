@@ -1,6 +1,69 @@
-param(
+﻿param(
     [string]$EnvFile = ".env"
 )
+
+# --- Auto-Update Configuration ---
+
+$GitHubRepoOwner = "neiromaster"
+$GitHubRepoName = "auto-converter"
+
+function Check-ForUpdates {
+    Write-Log "🔄 Проверяем обновление..."
+    $CurrentScriptPath = $MyInvocation.MyCommand.Definition
+    $ApiUrl = "https://api.github.com/repos/$GitHubRepoOwner/$GitHubRepoName/releases/latest"
+
+    try {
+        $CurrentScriptHash = (Get-FileHash -Algorithm SHA256 -Path $CurrentScriptPath).Hash
+        Write-Log "🔄 Хэш скрипта: $CurrentScriptHash"
+
+        $LatestRelease = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "PowerShell-Updater" } -TimeoutSec 10
+        $ReleaseBody = $LatestRelease.body
+        $LatestReleaseHash = ($ReleaseBody | Select-String -Pattern "SHA256: ([a-fA-F0-9]{64})" | ForEach-Object { $_.Matches[0].Groups[1].Value })
+
+        if (-not $LatestReleaseHash) {
+            Write-Log "⚠ Предупреждение: хеш SHA256 не найден в теле последнего релиза. Невозможно выполнить проверку обновлений на основе содержимого."
+            # Fallback to version-based check or just exit if no hash is found
+            return
+        }
+
+        Write-Log "🔄 Хэш скрипта в последнем релизе: $LatestReleaseHash"
+
+        if ($CurrentScriptHash -ne $LatestReleaseHash) {
+            Write-Log "🔄 Доступна новая версия. Применяем обновление..."
+            $DownloadUrl = $LatestRelease.assets | Where-Object { $_.name -eq "auto-converter.ps1" } | Select-Object -ExpandProperty browser_download_url
+
+            if ($DownloadUrl) {
+                $TempUpdatePath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter.ps1.new"
+                Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempUpdatePath -TimeoutSec 30
+
+                Write-Log "🔄 Обновление загружено в $TempUpdatePath. Применение обновления..."
+
+                # Self-replacement logic (remains the same)
+                $UpdateScriptContent = @"
+Start-Sleep -Seconds 2
+Rename-Item -Path "$CurrentScriptPath" -NewName "$CurrentScriptPath.old" -Force
+Rename-Item -Path "$TempUpdatePath" -NewName "$CurrentScriptPath" -Force
+Remove-Item -Path "$CurrentScriptPath.old" -Force -ErrorAction SilentlyContinue
+Write-Host "🔄 Обновление завершено. Перезапуск скрипта..."
+Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$CurrentScriptPath`""
+"@
+                $TempUpdaterPath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter-updater.ps1"
+                $UpdateScriptContent | Out-File $TempUpdaterPath -Encoding UTF8
+
+                Write-Log "🔄 Перезапуск для применения обновления..."
+                Start-Process powershell.exe -ArgumentList "-NoProfile -File `"$TempUpdaterPath`"" -WindowStyle Hidden
+                exit # Exit the current script
+            } else {
+                Write-Log "❌ Ошибка: Не удалось найти auto-converter.ps1 в последней версии."
+            }
+        } else {
+            Write-Log "🔄 Скрипт обновлён."
+            Remove-Item -Path $TempUpdatePath -ErrorAction SilentlyContinue # Clean up temp file
+        }
+    } catch {
+        Write-Log "❌ Ошибка обновления: $_"
+    }
+}
 
 # === 1. Загрузка .env ===
 if (-not (Test-Path $EnvFile)) {
@@ -59,6 +122,9 @@ if (-not (Test-Path $FFmpegPath)) {
     Write-Error "❌ FFmpeg не найден: $FFmpegPath"
     exit 1
 }
+
+# --- Check for updates ---
+Check-ForUpdates
 
 # === 4. Логирование ===
 function Write-Log {
