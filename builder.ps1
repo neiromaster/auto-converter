@@ -3,7 +3,7 @@ $outputFile = "dist/auto-converter.ps1"
 
 $outputDir = Split-Path $outputFile
 if (-not [string]::IsNullOrWhiteSpace($outputDir) -and -not (Test-Path $outputDir)) {
-    New-Item -ItemType Directory -Path $outputDir | Out-Null
+    New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
 }
 
 $embedded = @()
@@ -22,27 +22,29 @@ function Embed-Includes {
 
     foreach ($line in $lines) {
         if ($line -match '^\s*\.\s*["'']?\.\\?([^"'']+\.ps1)') {
-            $resolvedPath = Join-Path $basePath $matches[1] | Resolve-Path -ErrorAction SilentlyContinue
-            if (-not $resolvedPath) {
+            $joinedPath = Join-Path $basePath $matches[1]
+            $resolvedItem = Resolve-Path $joinedPath -ErrorAction SilentlyContinue
+
+            if (-not $resolvedItem) {
                 Write-Warning "Файл $($matches[1]) не найден, оставляю строку подключения"
                 Add-Content $outputFile $line
                 continue
             }
 
-            $resolvedPath = $resolvedPath.ProviderPath
+            $normalizedPath = (Get-Item $resolvedItem).FullName.ToLowerInvariant()
 
-            if ($embedded -contains $resolvedPath) {
-                Write-Host "⚠ Пропуск повторного подключения: $resolvedPath"
+            if ($embedded -contains $normalizedPath) {
+                Write-Host "⚠ Пропуск повторного подключения: $normalizedPath"
                 continue
             }
 
-            $embedded += $resolvedPath
-            Write-Host "📄 Встраиваю: $resolvedPath"
+            $embedded += $normalizedPath
+            Write-Host "📄 Встраиваю: $normalizedPath"
 
-            Add-Content $outputFile "`n# --- Start of $resolvedPath ---"
-            $content = Get-Content $resolvedPath
-            Embed-Includes $content (Split-Path $resolvedPath)
-            Add-Content $outputFile "# --- End of $resolvedPath ---`n"
+            Add-Content $outputFile "`n# --- Start of $normalizedPath ---"
+            $content = Get-Content $resolvedItem
+            Embed-Includes $content (Split-Path $normalizedPath)
+            Add-Content $outputFile "# --- End of $normalizedPath ---`n"
         }
         else {
             Add-Content $outputFile $line
