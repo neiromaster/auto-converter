@@ -31,7 +31,7 @@ function Embed-Includes {
                 continue
             }
 
-            $normalizedPath = (Get-Item $resolvedItem).FullName.ToLowerInvariant()
+            $normalizedPath = (Get-Item $resolvedItem).FullName.Replace('\', '/').ToLowerInvariant()
             Write-Host "DEBUG: Checking for $normalizedPath"
             Write-Host "DEBUG: Current embedded: $($embedded -join ', ')"
 
