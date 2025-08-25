@@ -1,5 +1,10 @@
 $mainScript = "auto-converter.ps1"
-$outputFile = "auto-converter.psm1"
+$outputFile = "dist/auto-converter.ps1"
+
+$outputDir = Split-Path $outputFile
+if (-not [string]::IsNullOrWhiteSpace($outputDir) -and -not (Test-Path $outputDir)) {
+    New-Item -ItemType Directory -Path $outputDir | Out-Null
+}
 
 $embedded = @()
 
