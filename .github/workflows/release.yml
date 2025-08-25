@@ -15,8 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup PowerShell
-        uses: actions/setup-powershell@v1
+      
 
       - name: Run builder.ps1
         run: pwsh -File builder.ps1
