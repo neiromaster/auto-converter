@@ -192,13 +192,27 @@ finally {
 
 # === Telegram ===
 function Send-TelegramMessage {
-    param([string]$Message)
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Message,
 
-    if (-not $TelegramEnabled) { return }
+        [Parameter(Mandatory=$true)]
+        [bool]$IsTelegramEnabled,
 
-    $Uri = "https://api.telegram.org/bot$TelegramBotToken/sendMessage"
+        [Parameter(Mandatory=$true)]
+        [string]$BotToken,
+
+        [Parameter(Mandatory=$true)]
+        [string]$ChannelId
+    )
+
+    if (-not $IsTelegramEnabled) {
+        return $true
+    }
+
+    $Uri = "https://api.telegram.org/bot$BotToken/sendMessage"
     $Body = @{
-        chat_id    = $TelegramChannelId
+        chat_id    = $ChannelId
         text       = $Message
         parse_mode = "HTML"
     }
@@ -207,17 +221,18 @@ function Send-TelegramMessage {
     for ($i = 1; $i -le $retries; $i++) {
         try {
             Invoke-RestMethod -Uri $Uri -Method Post -Body $Body -TimeoutSec 10 | Out-Null
-            return
+            return $true
         }
         catch {
             if ($i -eq $retries) {
-                Write-Log "⚠ Не удалось отправить в Telegram после $retries попыток: $_"
+                return $false
             }
             else {
                 Start-Sleep -Seconds (2 * $i)
             }
         }
     }
+    return $false
 }
 
 # === Функция: стабилизация размера ===
@@ -411,7 +426,9 @@ $Action = {
 📦 $("{0:F1}" -f $FileSizeMB) МБ
 ⏱ $(Get-Date -Format 'HH:mm:ss')
                 "
-    Send-TelegramMessage -Message $msg.Trim()
+    if (-not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChannelId)) {
+        Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+    }
                 
     if ($FileSizeMB -lt $MinFileSizeMB) {
         Write-Log "📉 Маленький файл ($("{0:F1}" -f $FileSizeMB) МБ): $FileName"
@@ -445,7 +462,9 @@ $Action = {
 📦 $("{0:F1}" -f $FinalSizeMB) МБ
 ⏱ $(Get-Date -Format 'HH:mm:ss')
                 "
-                Send-TelegramMessage -Message $msg.Trim()
+                if (-not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChannelId)) {
+                    Write-Log "⚠ Не удалось отправить сообщение в Telegram об обработке файла: $OutputFileName"
+                }
             }
         }
         else {
