@@ -15,6 +15,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup PowerShell
+        uses: actions/setup-powershell@v1
+
+      - name: Run builder.ps1
+        run: pwsh -File builder.ps1
+
       - name: Get current date and month
         id: date
         run: |
@@ -61,7 +67,7 @@ jobs:
       - name: Calculate auto-converter.ps1 SHA256
         id: calculate_hash
         run: |
-          HASH=$(sha256sum auto-converter.ps1 | awk '{print $1}')
+          HASH=$(sha256sum dist/auto-converter.ps1 | awk '{print $1}')
           echo "SCRIPT_SHA256=$HASH" >> $GITHUB_ENV
           echo "Calculated SHA256: $HASH"
 
@@ -74,6 +80,6 @@ jobs:
             Automated release for version ${{ env.TAG_NAME }}
             SHA256: ${{ env.SCRIPT_SHA256 }}
           files: |
-            auto-converter.ps1
+            dist/auto-converter.ps1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

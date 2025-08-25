@@ -21,13 +21,15 @@ This PowerShell script automatically monitors a specified source folder for new 
 
 ## Installation
 
-1.  **Clone the repository** (or download the script):
+1. **Clone the repository** (or download the script):
+
     ```bash
     git clone https://github.com/neiromaster/auto-converter.git
     cd auto-converter
     ```
-2.  **Install FFmpeg**: Download the latest FFmpeg build from [ffmpeg.org](https://ffmpeg.org/download.html) and extract it to a location on your system. Note the path to `ffmpeg.exe`.
-3.  **Create `.env` file**: Create a file named `.env` in the root directory of the project (where `auto-converter.ps1` is located). See the [Configuration](#configuration) section for details.
+
+2. **Install FFmpeg**: Download the latest FFmpeg build from [ffmpeg.org](https://ffmpeg.org/download.html) and extract it to a location on your system. Note the path to `ffmpeg.exe`.
+3. **Create `.env` file**: Create a file named `.env` in the root directory of the project (where `auto-converter.ps1` is located). See the [Configuration](#configuration) section for details.
 
 ## Configuration
 
@@ -63,6 +65,7 @@ TELEGRAM_CHANNEL_ID=-1234567890                    # Your Telegram Channel ID (e
 ```
 
 **Important Notes for Telegram:**
+
 - To get a `TELEGRAM_BOT_TOKEN`, talk to BotFather on Telegram and create a new bot.
 - To get your `TELEGRAM_CHANNEL_ID`, add your bot to a channel as an administrator. Then, send a message to the channel and use `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates` in your browser. Look for the `chat` object and its `id` field (it will be a negative number for channels).
 
@@ -78,19 +81,19 @@ The script will start monitoring the `SOURCE_FOLDER`. To stop the script, press 
 
 ## How it Works
 
-1.  **Loads Configuration**: Reads settings from the `.env` file.
-2.  **Monitors Source Folder**: Uses `FileSystemWatcher` to detect new files.
-3.  **File Stabilization**: If enabled, it continuously checks the file size until it stabilizes, ensuring the file is fully downloaded/copied.
-4.  **FFmpeg Conversion**: Once a video file is detected and stable, it uses FFmpeg to convert it. It attempts to use `cuvid` for decoding and `h264_nvenc` for encoding if an NVIDIA GPU is present.
-5.  **Moves to Target**: After successful conversion, the new file is moved to the `TARGET_FOLDER`.
-6.  **Logging & Notifications**: Logs all significant events and sends Telegram notifications if configured.
+1. **Loads Configuration**: Reads settings from the `.env` file.
+2. **Monitors Source Folder**: Uses `FileSystemWatcher` to detect new files.
+3. **File Stabilization**: If enabled, it continuously checks the file size until it stabilizes, ensuring the file is fully downloaded/copied.
+4. **FFmpeg Conversion**: Once a video file is detected and stable, it uses FFmpeg to convert it. It attempts to use `cuvid` for decoding and `h264_nvenc` for encoding if an NVIDIA GPU is present.
+5. **Moves to Target**: After successful conversion, the new file is moved to the `TARGET_FOLDER`.
+6. **Logging & Notifications**: Logs all significant events and sends Telegram notifications if configured.
 
 ## Troubleshooting
 
--   **`FFmpeg not found`**: Ensure `FFMPEG_PATH` in your `.env` file points to the correct `ffmpeg.exe` location.
--   **`Path does not exist`**: Verify that `SOURCE_FOLDER`, `TARGET_FOLDER`, `TEMP_FOLDER`, and `LOG_FILE` paths in your `.env` are correct and accessible.
--   **`Error parsing settings`**: Check your `.env` file for correct variable types (e.g., `true`/`false` for booleans, numbers for integers).
--   **Conversion issues**: Check the log file for FFmpeg errors. Ensure your NVIDIA drivers are up to date if using CUDA acceleration.
--   **Telegram messages not sending**: Double-check your `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHANNEL_ID` in the `.env` file. Ensure your bot has admin rights in the channel.
+- **`FFmpeg not found`**: Ensure `FFMPEG_PATH` in your `.env` file points to the correct `ffmpeg.exe` location.
+- **`Path does not exist`**: Verify that `SOURCE_FOLDER`, `TARGET_FOLDER`, `TEMP_FOLDER`, and `LOG_FILE` paths in your `.env` are correct and accessible.
+- **`Error parsing settings`**: Check your `.env` file for correct variable types (e.g., `true`/`false` for booleans, numbers for integers).
+- **Conversion issues**: Check the log file for FFmpeg errors. Ensure your NVIDIA drivers are up to date if using CUDA acceleration.
+- **Telegram messages not sending**: Double-check your `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHANNEL_ID` in the `.env` file. Ensure your bot has admin rights in the channel.
 
 For further assistance, please refer to the script's source code (`auto-converter.ps1`) for detailed logic and error messages.
