@@ -32,6 +32,8 @@ function Embed-Includes {
             }
 
             $normalizedPath = (Get-Item $resolvedItem).FullName.ToLowerInvariant()
+            Write-Host "DEBUG: Checking for $normalizedPath"
+            Write-Host "DEBUG: Current embedded: $($embedded -join ', ')"
 
             if ($embedded -contains $normalizedPath) {
                 Write-Host "⚠ Пропуск повторного подключения: $normalizedPath"
