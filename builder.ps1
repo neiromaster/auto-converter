@@ -42,7 +42,7 @@ function Embed-Includes {
             Write-Host "📄 Встраиваю: $normalizedPath"
 
             Add-Content $outputFile "`n# --- Start of $normalizedPath ---"
-            $content = Get-Content $resolvedItem
+            $content = Get-Content $normalizedPath
             Embed-Includes $content (Split-Path $normalizedPath)
             Add-Content $outputFile "# --- End of $normalizedPath ---`n"
         }
