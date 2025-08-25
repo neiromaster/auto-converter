@@ -1,6 +1,3 @@
-if ($global:UpdaterIncluded) { return }
-$global:UpdaterIncluded = $true
-
 . .\logger.ps1
 
 # === Auto-Update Configuration ===

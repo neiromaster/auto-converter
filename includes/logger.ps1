@@ -1,6 +1,3 @@
-if ($global:LoggerIncluded) { return }
-$global:LoggerIncluded = $true
-
 $LogFile = $LOG_FILE
 
 # === Логирование ===

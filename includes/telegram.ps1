@@ -1,6 +1,3 @@
-if ($global:TelegramIncluded) { return }
-$global:TelegramIncluded = $true
-
 . .\logger.ps1
 
 # === Telegram ===
