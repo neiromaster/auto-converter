@@ -1,4 +1,4 @@
-. .\Write-Log.ps1
+. .\includes\Write-Log.ps1
 
 # === Auto-Update Configuration ===
 

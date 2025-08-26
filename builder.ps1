@@ -1,5 +1,6 @@
 $mainScript = "auto-converter.ps1"
 $outputFile = "dist/auto-converter.ps1"
+$mainScriptDirectory = Split-Path $mainScript
 
 $outputDir = Split-Path $outputFile
 if (-not [string]::IsNullOrWhiteSpace($outputDir) -and -not (Test-Path $outputDir)) {
@@ -43,7 +44,7 @@ function Embed-Includes {
 
             Add-Content $outputFile "`n# --- Start of $normalizedPath ---"
             $content = Get-Content $normalizedPath
-            Embed-Includes $content (Split-Path $normalizedPath)
+            Embed-Includes $content $mainScriptDirectory
             Add-Content $outputFile "# --- End of $normalizedPath ---`n"
         }
         else {

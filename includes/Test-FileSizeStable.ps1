@@ -1,12 +1,12 @@
 
-. .\Write-Log.ps1
+. .\includes\Write-Log.ps1
 
 # === Функция: стабилизация размера ===
 function Test-FileSizeStable {
     param(
         [string]$Path,
-        [int]$StabilizationTimeoutSec,
-        [int]$StabilizationCheckIntervalSec
+        [int]$StabilizationTimeoutSec = 5,
+        [int]$StabilizationCheckIntervalSec = 600
     )
     $StartTime = Get-Date
     $LastSize = -1

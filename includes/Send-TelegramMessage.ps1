@@ -1,18 +1,18 @@
-. .\Write-Log.ps1
+. .\includes\Write-Log.ps1
 
 # === Telegram ===
 function Send-TelegramMessage {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$Message,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [bool]$IsTelegramEnabled,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$BotToken,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$ChannelId
     )
 
