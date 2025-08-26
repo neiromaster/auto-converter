@@ -66,8 +66,6 @@ if (-not (Test-Path $FFmpegPath)) {
 
 . .\includes\Test-FileSizeStable.ps1
 
-# === Функция: стабилизация размера ===
-
 
 # === Функция: определение декодера ===
 function Get-FfmpegConversionStrategy {
