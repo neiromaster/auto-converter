@@ -1,4 +1,4 @@
-. .\logger.ps1
+. .\Write-Log.ps1
 
 # === Auto-Update Configuration ===
 

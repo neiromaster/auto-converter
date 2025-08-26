@@ -58,47 +58,16 @@ if (-not (Test-Path $FFmpegPath)) {
     exit 1
 }
 
-. .\includes\logger.ps1
+. .\includes\Write-Log.ps1
 
-. .\includes\updater.ps1
+. .\includes\Check-ForUpdates.ps1
 
-. .\includes\telegram.ps1
+. .\includes\Send-TelegramMessage.ps1
+
+. .\includes\Test-FileSizeStable.ps1
 
 # === Функция: стабилизация размера ===
-function Test-FileSizeStable {
-    param([string]$Path)
-    $StartTime = Get-Date
-    $LastSize = -1
 
-    while (((Get-Date) - $StartTime).TotalSeconds -lt $StabilizationTimeoutSec) {
-        if (-not (Test-Path -LiteralPath $Path)) {
-            Write-Log "⚠ Файл исчез: $Path"
-            return $false
-        }
-
-        try {
-            $CurrentSize = (Get-Item -LiteralPath $Path).Length
-        }
-        catch {
-            Write-Log "🔒 Файл используется: $Path"
-            $LastSize = -1
-            Start-Sleep -Seconds $StabilizationCheckIntervalSec
-            continue
-        }
-
-        if ($LastSize -ne -1 -and [Math]::Abs($CurrentSize - $LastSize) -le $StabilizationToleranceBytes) {
-            Write-Log "✅ Размер стабилизирован: $CurrentSize байт"
-            return $true
-        }
-
-        $LastSize = $CurrentSize
-        Write-Log "📏 Размер: $("{0:N0}" -f $CurrentSize) байт — ожидание..."
-        Start-Sleep -Seconds $StabilizationCheckIntervalSec
-    }
-
-    Write-Log "⏰ Таймаут стабилизации: $Path"
-    return $true
-}
 
 # === Функция: определение декодера ===
 function Get-FfmpegConversionStrategy {
@@ -240,7 +209,7 @@ $Action = {
     # Ожидание завершения записи
     if ($UseFileSizeStabilization) {
         Write-Log "⏳ Ожидание стабилизации: $FileName"
-        if (-not (Test-FileSizeStable -Path $FilePath)) {
+        if (-not (Test-FileSizeStable -Path $FilePath -StabilizationTimeoutSec $StabilizationTimeoutSec -StabilizationCheckIntervalSec $StabilizationCheckIntervalSec)) {
             Write-Log "<b>⚠ Ошибка</b>`nФайл не стабилизировался: <code>$FileName</code>"
             return
         }
