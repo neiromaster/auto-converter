@@ -6,7 +6,7 @@ if (-not [string]::IsNullOrWhiteSpace($outputDir) -and -not (Test-Path $outputDi
     New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
 }
 
-$embedded = New-Object System.Collections.Generic.HashSet[string]
+$embedded = New-Object System.Collections.Generic.HashSet[string]([System.StringComparer]::Ordinal)
 
 if (Test-Path $outputFile) { Remove-Item $outputFile }
 
@@ -31,7 +31,7 @@ function Embed-Includes {
                 continue
             }
 
-            $normalizedPath = (Get-Item $resolvedItem).FullName.Replace('\', '/').ToLowerInvariant()
+            $normalizedPath = (Get-Item $resolvedItem).FullName.Replace('\', '/')
 
             if ($embedded -contains $normalizedPath) {
                 Write-Host "⚠ Пропуск повторного подключения: $normalizedPath"
