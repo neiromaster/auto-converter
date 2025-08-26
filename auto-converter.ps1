@@ -101,10 +101,7 @@ function Get-FfmpegConversionStrategy {
         Write-Log "🛠  Будет использован программный декодер."
     }
 
-    return [PSCustomObject]@{ 
-        DecoderCommand = $decoderCommand
-        VideoCodec     = $codec
-    }
+    return $decoderCommand
 }
 
 
@@ -233,7 +230,7 @@ $Action = {
 
     $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath
 
-    if (-not $strategy) {
+    if ($null -eq $strategy) {
         Write-Log "❌ ОШИБКА: Не удалось найти видеопоток в файле."
         return
     }
@@ -244,7 +241,7 @@ $Action = {
     $FinalOutput = Join-Path $TargetFolder $OutputFileName
 
     try {
-        if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy.DecoderCommand) {
+        if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy) {
             if (Test-Path -LiteralPath $TempOutput) {
                 if (Test-Path -LiteralPath $FinalOutput) { Remove-Item -LiteralPath $FinalOutput -Force }
                 Move-Item -LiteralPath $TempOutput $FinalOutput -Force
