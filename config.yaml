@@ -7,6 +7,7 @@ temp_folder: '%TEMP%'
 min_file_size_mb: 800
 prefix: жат-
 ignore_prefix: жат-
+telegram_enabled: true
 
 # --- FFmpeg ---
 ffmpeg_path: D:/scoop/shims/ffmpeg.exe

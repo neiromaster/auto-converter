@@ -52,7 +52,7 @@ try {
     $StabilizationCheckIntervalSec = [int]$config.stabilization_check_interval_sec
     $StabilizationTimeoutSec = [int]$config.stabilization_timeout_sec
     $StabilizationToleranceBytes = [int]$config.stabilization_tolerance_bytes
-    $TelegramEnabled = [bool]::Parse($telegramSecrets.TELEGRAM_ENABLED.ToLower())
+    $TelegramEnabled = [bool]::Parse($config.telegram_enabled)
     $UseFileSizeStabilization = [bool]::Parse($config.use_file_size_stabilization)
 }
 catch {
