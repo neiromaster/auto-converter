@@ -2,6 +2,7 @@ paths:
   source_folder: D:\disc\YandexDisk\sync
   target_folder: D:\disc\YandexDisk\sync
   temp_folder: '%TEMP%'
+  destination_folder: D:\disc\YandexDisk\processed_media
 
 settings:
   min_file_size_mb: 800
@@ -21,7 +22,10 @@ video_extensions:
   - .webm
   - .mkv
   - .m4v
-  - .3gp
+
+subtitle_extension:
+  - .ass
+  - .srt
 
 stabilization_strategy:
   use_file_size_stabilization: true
