@@ -28,10 +28,10 @@ function Get-FfmpegConversionStrategy {
 
     if ($codec) {
         $decoderCommand = "-c:v $($codec)_cuvid"
-        Write-Log "🛠  Кодек '$($codec)' определен."
+        Write-Log "🛠  Кодек '$($codec)' определен." -Pale
     }
     else {
-        Write-Log "🛠  Будет использован программный декодер."
+        Write-Log "🛠  Будет использован программный декодер." -Pale
     }
 
     return $decoderCommand

@@ -109,7 +109,7 @@ $Action = {
     Write-Log "📁 Обнаружен файл: $FileName"
 
     if ($VideoExtensions -notcontains $Extension) {
-        Write-Log "❌ Не видео: $Extension"
+        Write-Log "❌ Не видео: $Extension" -Pale
         return
     }
 

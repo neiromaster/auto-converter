@@ -30,7 +30,7 @@ function Convert-VideoWithProgress {
         "`"$OutputFile`""
     )
 
-    Write-Log "🚀 FFmpeg: $($Arguments -join ' ')"
+    Write-Log "🚀 FFmpeg: $($Arguments -join ' ')" -Pale
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $FFmpegPath

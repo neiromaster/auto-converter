@@ -6,13 +6,13 @@ $GitHubRepoOwner = "neiromaster"
 $GitHubRepoName = "auto-converter"
 
 function Check-ForUpdates {
-    Write-Log "🔄 Проверяем обновление..."
+    Write-Log "🔄 Проверяем обновление..." -Pale
     $CurrentScriptPath = $MyInvocation.PSCommandPath
     $ApiUrl = "https://api.github.com/repos/$GitHubRepoOwner/$GitHubRepoName/releases/latest"
 
     try {
         $CurrentScriptHash = (Get-FileHash -Algorithm SHA256 -Path $CurrentScriptPath).Hash
-        Write-Log "🔄 Хэш скрипта: $CurrentScriptHash"
+        Write-Log "🔄 Хэш скрипта: $CurrentScriptHash" -Pale
 
         $LatestRelease = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "PowerShell-Updater" } -TimeoutSec 10
         $ReleaseBody = $LatestRelease.body
@@ -23,7 +23,7 @@ function Check-ForUpdates {
             return
         }
 
-        Write-Log "🔄 Хэш скрипта в последнем релизе: $LatestReleaseHash"
+        Write-Log "🔄 Хэш скрипта в последнем релизе: $LatestReleaseHash" -Pale
 
         $TempUpdatePath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter.ps1.new"
 
@@ -34,7 +34,7 @@ function Check-ForUpdates {
             if ($DownloadUrl) {
                 Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempUpdatePath -TimeoutSec 30
 
-                Write-Log "🔄 Обновление загружено в $TempUpdatePath. Применение обновления..."
+                Write-Log "🔄 Обновление загружено в $TempUpdatePath. Применение обновления..." -Pale
 
                 $UpdateScriptContent = @"
 param(
@@ -102,7 +102,7 @@ finally {
                 $TempUpdaterPath = Join-Path ([System.IO.Path]::GetTempPath()) "auto-converter-updater.ps1"
                 $UpdateScriptContent | Out-File $TempUpdaterPath -Encoding UTF8
 
-                Write-Log "🔄 Перезапуск для применения обновления..."
+                Write-Log "🔄 Перезапуск для применения обновления..." -Pale
                 Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "$TempUpdaterPath", "-CurrentScriptPath", "$CurrentScriptPath", "-TempUpdatePath", "$TempUpdatePath"
                 exit
             }

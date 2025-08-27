@@ -27,7 +27,7 @@ function Test-FileSizeStable {
         }
 
         if ($CurrentSize -eq $LastSize) {
-            Write-Log "✅ Размер файла стабилизировался: $Path ($CurrentSize байт)"
+            Write-Log "✅ Размер файла стабилизировался: $Path ($CurrentSize байт)" -Pale
             return $true
         }
 
