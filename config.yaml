@@ -11,8 +11,17 @@ ignore_prefix: жат-
 # --- FFmpeg ---
 ffmpeg_path: D:/scoop/shims/ffmpeg.exe
 
-# --- Video Extensions (comma separated) ---
-video_extensions: .mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v,.3gp
+# --- Video Extensions ---
+video_extensions:
+  - .mp4
+  - .avi
+  - .mov
+  - .wmv
+  - .flv
+  - .webm
+  - .mkv
+  - .m4v
+  - .3gp
 
 # --- Stabilization Strategy ---
 use_file_size_stabilization: true

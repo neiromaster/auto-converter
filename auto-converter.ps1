@@ -66,7 +66,7 @@ $TempFolder = [System.Environment]::ExpandEnvironmentVariables($config.temp_fold
 $Prefix = $config.prefix
 $IgnorePrefix = $config.ignore_prefix
 $FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg_path)
-$VideoExtensions = $config.video_extensions -split ',' | ForEach-Object { $_.Trim() }
+$VideoExtensions = $config.video_extensions
 $TelegramBotToken = $telegramSecrets.TELEGRAM_BOT_TOKEN
 $TelegramChannelId = $telegramSecrets.TELEGRAM_CHANNEL_ID
 
