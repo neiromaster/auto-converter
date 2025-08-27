@@ -1,18 +1,17 @@
-# --- Paths ---
-source_folder: D:\disc\YandexDisk\sync
-target_folder: D:\disc\YandexDisk\sync
-temp_folder: '%TEMP%'
+paths:
+  source_folder: D:\disc\YandexDisk\sync
+  target_folder: D:\disc\YandexDisk\sync
+  temp_folder: '%TEMP%'
 
-# --- Settings ---
-min_file_size_mb: 800
-prefix: жат-
-ignore_prefix: жат-
-telegram_enabled: true
+settings:
+  min_file_size_mb: 800
+  prefix: жат-
+  ignore_prefix: жат-
+  telegram_enabled: true
 
-# --- FFmpeg ---
-ffmpeg_path: D:/scoop/shims/ffmpeg.exe
+ffmpeg:
+  ffmpeg_path: D:/scoop/shims/ffmpeg.exe
 
-# --- Video Extensions ---
 video_extensions:
   - .mp4
   - .avi
@@ -24,11 +23,10 @@ video_extensions:
   - .m4v
   - .3gp
 
-# --- Stabilization Strategy ---
-use_file_size_stabilization: true
-stabilization_check_interval_sec: 5
-stabilization_timeout_sec: 600
-stabilization_tolerance_bytes: 1024
+stabilization_strategy:
+  use_file_size_stabilization: true
+  stabilization_check_interval_sec: 5
+  stabilization_timeout_sec: 600
 
-# --- Logging ---
-log_file: auto-converter.log
+logging:
+  log_file: auto-converter.log

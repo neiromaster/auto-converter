@@ -48,24 +48,23 @@ catch {
 
 # === Преобразование типов и валидация ===
 try {
-    $MinFileSizeMB = [int]$config.min_file_size_mb
-    $StabilizationCheckIntervalSec = [int]$config.stabilization_check_interval_sec
-    $StabilizationTimeoutSec = [int]$config.stabilization_timeout_sec
-    $StabilizationToleranceBytes = [int]$config.stabilization_tolerance_bytes
-    $TelegramEnabled = [bool]::Parse($config.telegram_enabled)
-    $UseFileSizeStabilization = [bool]::Parse($config.use_file_size_stabilization)
+    $MinFileSizeMB = [int]$config.settings.min_file_size_mb
+    $StabilizationCheckIntervalSec = [int]$config.stabilization_strategy.stabilization_check_interval_sec
+    $StabilizationTimeoutSec = [int]$config.stabilization_strategy.stabilization_timeout_sec
+    $TelegramEnabled = [bool]::Parse($config.settings.telegram_enabled)
+    $UseFileSizeStabilization = [bool]::Parse($config.stabilization_strategy.use_file_size_stabilization)
 }
 catch {
     Write-Error "❌ Ошибка парсинга настроек: $_"
     exit 1
 }
 
-$SourceFolder = [System.Environment]::ExpandEnvironmentVariables($config.source_folder)
-$TargetFolder = [System.Environment]::ExpandEnvironmentVariables($config.target_folder)
-$TempFolder = [System.Environment]::ExpandEnvironmentVariables($config.temp_folder)
-$Prefix = $config.prefix
-$IgnorePrefix = $config.ignore_prefix
-$FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg_path)
+$SourceFolder = [System.Environment]::ExpandEnvironmentVariables($config.paths.source_folder)
+$TargetFolder = [System.Environment]::ExpandEnvironmentVariables($config.paths.target_folder)
+$TempFolder = [System.Environment]::ExpandEnvironmentVariables($config.paths.temp_folder)
+$Prefix = $config.settings.prefix
+$IgnorePrefix = $config.settings.ignore_prefix
+$FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg.ffmpeg_path)
 $VideoExtensions = $config.video_extensions
 $TelegramBotToken = $telegramSecrets.TELEGRAM_BOT_TOKEN
 $TelegramChannelId = $telegramSecrets.TELEGRAM_CHANNEL_ID
