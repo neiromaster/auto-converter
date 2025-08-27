@@ -1,48 +1,74 @@
-param(
-    [string]$EnvFile = ".env"
-)
+# --- Проверка и установка модуля powershell-yaml ---
+if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
+    Write-Host "Модуль 'powershell-yaml' не найден. Попытка установки..." -ForegroundColor Yellow
+    try {
+        Install-Module -Name powershell-yaml -Scope CurrentUser -Force -Confirm:$false
+        Write-Host "Модуль 'powershell-yaml' успешно установлен." -ForegroundColor Green
+    }
+    catch {
+        Write-Error "❌ Не удалось установить модуль 'powershell-yaml'. Возможно, требуются права администратора или отсутствует подключение к PowerShell Gallery. Ошибка: $($_.Exception.Message)"
+        exit 1
+    }
+}
 
-# === Загрузка .env ===
+Import-Module powershell-yaml
+
+$EnvFile = ".env"
+
+# === Загрузка .env (только для секретов Telegram) ===
 if (-not (Test-Path $EnvFile)) {
-    Write-Error "❌ Файл конфигурации не найден: $EnvFile"
+    Write-Error "❌ Файл .env не найден: $EnvFile"
     exit 1
 }
 
-$env:PS_ENV_LOADED = "true"
-
+$telegramSecrets = @{}
 Get-Content $EnvFile | ForEach-Object {
     $line = $_.Trim()
     if ($line -and $line[0] -ne '#' -and $line -match '^\s*([^=]+)=(.*)') {
         $key = $matches[1].Trim()
-        $value = $matches[2].Trim().Replace('"', '\"')
-        $value = [System.Environment]::ExpandEnvironmentVariables($value)
-        Set-Variable -Name $key -Value $value -Scope Script
+        $value = $matches[2].Trim().Replace('"', '"')
+        $telegramSecrets[$key] = $value
     }
+}
+
+# === Загрузка config.yaml ===
+$ConfigFile = "config.yaml"
+if (-not (Test-Path $ConfigFile)) {
+    Write-Error "❌ Файл конфигурации не найден: $ConfigFile"
+    exit 1
+}
+
+try {
+    $config = Get-Content $ConfigFile | ConvertFrom-Yaml
+}
+catch {
+    Write-Error "❌ Ошибка парсинга config.yaml: $($_.Exception.Message)"
+    exit 1
 }
 
 # === Преобразование типов и валидация ===
 try {
-    $MinFileSizeMB = [int]$MIN_FILE_SIZE_MB
-    $StabilizationCheckIntervalSec = [int]$STABILIZATION_CHECK_INTERVAL_SEC
-    $StabilizationTimeoutSec = [int]$STABILIZATION_TIMEOUT_SEC
-    $StabilizationToleranceBytes = [int]$STABILIZATION_TOLERANCE_BYTES
-    $TelegramEnabled = [bool]::Parse($TELEGRAM_ENABLED.ToLower())
-    $UseFileSizeStabilization = [bool]::Parse($USE_FILE_SIZE_STABILIZATION.ToLower())
+    $MinFileSizeMB = [int]$config.min_file_size_mb
+    $StabilizationCheckIntervalSec = [int]$config.stabilization_check_interval_sec
+    $StabilizationTimeoutSec = [int]$config.stabilization_timeout_sec
+    $StabilizationToleranceBytes = [int]$config.stabilization_tolerance_bytes
+    $TelegramEnabled = [bool]::Parse($telegramSecrets.TELEGRAM_ENABLED.ToLower())
+    $UseFileSizeStabilization = [bool]::Parse($config.use_file_size_stabilization)
 }
 catch {
     Write-Error "❌ Ошибка парсинга настроек: $_"
     exit 1
 }
 
-$SourceFolder = $SOURCE_FOLDER
-$TargetFolder = $TARGET_FOLDER
-$TempFolder = $TEMP_FOLDER
-$Prefix = $PREFIX
-$IgnorePrefix = $IGNORE_PREFIX
-$FFmpegPath = $FFMPEG_PATH
-$VideoExtensions = $VIDEO_EXTENSIONS -split ',' | ForEach-Object { $_.Trim() }
-$TelegramBotToken = $TELEGRAM_BOT_TOKEN
-$TelegramChannelId = $TELEGRAM_CHANNEL_ID
+$SourceFolder = [System.Environment]::ExpandEnvironmentVariables($config.source_folder)
+$TargetFolder = [System.Environment]::ExpandEnvironmentVariables($config.target_folder)
+$TempFolder = [System.Environment]::ExpandEnvironmentVariables($config.temp_folder)
+$Prefix = $config.prefix
+$IgnorePrefix = $config.ignore_prefix
+$FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg_path)
+$VideoExtensions = $config.video_extensions -split ',' | ForEach-Object { $_.Trim() }
+$TelegramBotToken = $telegramSecrets.TELEGRAM_BOT_TOKEN
+$TelegramChannelId = $telegramSecrets.TELEGRAM_CHANNEL_ID
 
 # === Проверка путей ===
 foreach ($path in $SourceFolder, $TargetFolder, $TempFolder) {
@@ -183,4 +209,3 @@ finally {
     $Watcher.Dispose()
     Write-Log "🛑 Мониторинг остановлен."
 }
-
