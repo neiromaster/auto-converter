@@ -71,9 +71,6 @@ if (-not (Test-Path $FFmpegPath)) {
 . .\includes\Convert-VideoWithProgress.ps1
 
 
-
-
-
 # --- Проверка обновления ---
 Check-ForUpdates
 
@@ -91,15 +88,15 @@ $Action = {
     }
 
     if ($FileName -like "$IgnorePrefix*") {
-        Write-Log "🚫 Игнор: префикс $IgnorePrefix"
+        Write-Log "🚫 Игнор: префикс $IgnorePrefix" -Pale
         return
     }
 
     # Ожидание завершения записи
     if ($UseFileSizeStabilization) {
-        Write-Log "⏳ Ожидание стабилизации: $FileName"
+        Write-Log "⏳ Ожидание стабилизации: $FileName" -Pale
         if (-not (Test-FileSizeStable -Path $FilePath -StabilizationTimeoutSec $StabilizationTimeoutSec -StabilizationCheckIntervalSec $StabilizationCheckIntervalSec)) {
-            Write-Log "<b>⚠ Ошибка</b>`nФайл не стабилизировался: <code>$FileName</code>"
+            Write-Log "⚠ Ошибка: Файл не стабилизировался: $FileName"
             return
         }
     }
@@ -118,7 +115,7 @@ $Action = {
     }
                 
     if ($FileSizeMB -lt $MinFileSizeMB) {
-        Write-Log "📉 Маленький файл ($("{0:F1}" -f $FileSizeMB) МБ): $FileName"
+        Write-Log "📉 Маленький файл ($("{0:F1}" -f $FileSizeMB) МБ): $FileName" -Pale
         return
     }
 
