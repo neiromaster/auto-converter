@@ -29,10 +29,12 @@ catch {
 }
 
 $AutoUpdateEnabled = $true
+$LogFile = $null
 
 # === Преобразование типов и валидация ===
 try {
     $AutoUpdateEnabled = [bool]::Parse($config.settings.auto_update_enabled)
+    $LogFile = $config.logging.log_file
 }
 catch {
     Write-Error "❌ Ошибка парсинга настроек: $_"
