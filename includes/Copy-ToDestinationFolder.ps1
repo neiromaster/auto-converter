@@ -30,7 +30,7 @@ function Copy-ToDestinationFolder {
 
     if (-not $foundDestinationFolder) {
         Write-Log "❌ Не найдена папка назначения для файла: $FileName" -Pale
-        return
+        return "❌ Не найдена папка назначения для файла: $FileName"
     }
 
     Write-Log "✅ Найдена папка назначения: $foundDestinationFolder" -Pale
@@ -42,5 +42,6 @@ function Copy-ToDestinationFolder {
     }
     catch {
         Write-Log "❌ Ошибка при копировании файла(ов) в ${foundDestinationFolder}: $($_.Exception.Message)"
+        return "❌ Ошибка при копировании файла(ов) в ${foundDestinationFolder}: $($_.Exception.Message)"
     }
 }

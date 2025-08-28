@@ -95,6 +95,7 @@ $VideoExtensions = $config.video_extensions
 $SubtitleExtensions = $config.subtitle_extension
 $TelegramBotToken = $telegramSecrets.TELEGRAM_BOT_TOKEN
 $TelegramChannelId = $telegramSecrets.TELEGRAM_CHANNEL_ID
+$TelegramChatId = $telegramSecrets.TELEGRAM_CHAT_ID
 
 # === Проверка путей ===
 foreach ($path in $SourceFolder, $TargetFolder, $TempFolder) {
@@ -138,7 +139,11 @@ $Action = {
     if ($SubtitleExtensions -contains $Extension) {
         Write-Log "📝 Обнаружены субтитры: $FileName" -Pale
         if ($DestinationFolder) {
-            Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
+            $msg = Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
+
+            if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
+                Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+            }
         }
         return
     }
@@ -177,7 +182,11 @@ $Action = {
 
     Write-Log "📤 Копирование видеофайла: $FileName"
     if ($DestinationFolder) {
-        Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
+        $msg = Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
+
+        if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
+            Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+        }
     }
 
     if ($FileSizeMB -lt $MinFileSizeMB) {
@@ -218,7 +227,11 @@ $Action = {
 
                 Write-Log "📤 Копирование сжатого видеофайла: $OutputFileName" -Pale
                 if ($DestinationFolder) {
-                    Copy-ToDestinationFolder -FilePath $FinalOutput -DestinationRoot $DestinationFolder
+                    $msg = Copy-ToDestinationFolder -FilePath $FinalOutput -DestinationRoot $DestinationFolder
+
+                    if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
+                        Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+                    }
                 }
             }
         }
