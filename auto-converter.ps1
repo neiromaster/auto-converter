@@ -125,6 +125,11 @@ $Action = {
     $FileName = $Event.SourceEventArgs.Name
     $Extension = [IO.Path]::GetExtension($FileName).ToLower()
 
+    if (-not (Test-Path -LiteralPath $FilePath)) {
+        Write-Log "⏭ Файл не найден (возможно, перемещен или удален): $FileName" -Pale
+        return
+    }
+
     Write-Log "📁 Обнаружен файл: $FileName"
 
     if ($SubtitleExtensions -contains $Extension) {
