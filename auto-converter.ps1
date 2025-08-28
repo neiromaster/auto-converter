@@ -237,7 +237,7 @@ Write-Log "Нажмите Ctrl+C для остановки."
 
 $Watcher = New-Object IO.FileSystemWatcher
 $Watcher.Path = $SourceFolder
-$Watcher.IncludeSubdirectories = $false
+$Watcher.IncludeSubdirectories = $true
 $Watcher.EnableRaisingEvents = $true
 $Watcher.Filter = "*.*"
 
