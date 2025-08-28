@@ -2,14 +2,14 @@ paths:
   source_folder: D:\disc\YandexDisk\sync
   target_folder: D:\disc\YandexDisk\sync
   temp_folder: '%TEMP%'
-  destination_folder: D:\disc\YandexDisk\processed_media
+  destination_folder: E:\Yandex.Disk\равки 2
 
 settings:
   min_file_size_mb: 800
   prefix: жат-
   ignore_prefix: жат-
   telegram_enabled: true
-  auto_update_enabled: false
+  auto_update_enabled: true
 
 ffmpeg:
   ffmpeg_path: D:/scoop/shims/ffmpeg.exe

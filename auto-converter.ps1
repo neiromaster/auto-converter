@@ -1,3 +1,10 @@
+. .\includes\Check-ForUpdates.ps1
+
+# --- Проверка обновления ---
+if ($AutoUpdateEnabled) {
+    Check-ForUpdates
+}
+
 # --- Проверка и установка модуля powershell-yaml ---
 if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
     Write-Host "Модуль 'powershell-yaml' не найден. Попытка установки..." -ForegroundColor Yellow
@@ -91,8 +98,6 @@ if (-not (Test-Path $FFmpegPath)) {
 
 . .\includes\Write-Log.ps1
 
-. .\includes\Check-ForUpdates.ps1
-
 . .\includes\Send-TelegramMessage.ps1
 
 . .\includes\Test-FileSizeStable.ps1
@@ -102,12 +107,6 @@ if (-not (Test-Path $FFmpegPath)) {
 . .\includes\Convert-VideoWithProgress.ps1
 
 . .\includes\Copy-ToDestinationFolder.ps1
-
-
-# --- Проверка обновления ---
-if ($AutoUpdateEnabled) {
-    Check-ForUpdates
-}
 
 # === Основной обработчик события ===
 $Action = {
