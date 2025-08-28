@@ -1,10 +1,3 @@
-. .\includes\Check-ForUpdates.ps1
-
-# --- Проверка обновления ---
-if ($AutoUpdateEnabled) {
-    Check-ForUpdates
-}
-
 # --- Проверка и установка модуля powershell-yaml ---
 if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
     Write-Host "Модуль 'powershell-yaml' не найден. Попытка установки..." -ForegroundColor Yellow
@@ -19,6 +12,39 @@ if (-not (Get-Module -ListAvailable -Name powershell-yaml)) {
 }
 
 Import-Module powershell-yaml
+
+# === Загрузка config.yaml ===
+$ConfigFile = "config.yaml"
+if (-not (Test-Path $ConfigFile)) {
+    Write-Error "❌ Файл конфигурации не найден: $ConfigFile"
+    exit 1
+}
+
+try {
+    $config = Get-Content $ConfigFile | ConvertFrom-Yaml
+}
+catch {
+    Write-Error "❌ Ошибка парсинга config.yaml: $($_.Exception.Message)"
+    exit 1
+}
+
+$AutoUpdateEnabled = $true
+
+# === Преобразование типов и валидация ===
+try {
+    $AutoUpdateEnabled = [bool]::Parse($config.settings.auto_update_enabled)
+}
+catch {
+    Write-Error "❌ Ошибка парсинга настроек: $_"
+}
+
+. .\includes\Check-ForUpdates.ps1
+
+# --- Проверка обновления ---
+if ($AutoUpdateEnabled) {
+    Check-ForUpdates
+}
+
 
 $EnvFile = ".env"
 
@@ -36,21 +62,6 @@ Get-Content $EnvFile | ForEach-Object {
         $value = $matches[2].Trim().Replace('"', '"')
         $telegramSecrets[$key] = $value
     }
-}
-
-# === Загрузка config.yaml ===
-$ConfigFile = "config.yaml"
-if (-not (Test-Path $ConfigFile)) {
-    Write-Error "❌ Файл конфигурации не найден: $ConfigFile"
-    exit 1
-}
-
-try {
-    $config = Get-Content $ConfigFile | ConvertFrom-Yaml
-}
-catch {
-    Write-Error "❌ Ошибка парсинга config.yaml: $($_.Exception.Message)"
-    exit 1
 }
 
 # === Преобразование типов и валидация ===
