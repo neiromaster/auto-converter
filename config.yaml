@@ -2,7 +2,7 @@ paths:
   source_folder: D:\disc\YandexDisk\sync
   target_folder: D:\disc\YandexDisk\sync
   temp_folder: '%TEMP%'
-  destination_folder: E:\Yandex.Disk\равки 2
+  destination_folder: D:\disc2\Yandex.Disk\Равки 2
 
 settings:
   min_file_size_mb: 800
