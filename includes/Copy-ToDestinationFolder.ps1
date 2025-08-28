@@ -37,8 +37,8 @@ function Copy-ToDestinationFolder {
 
     try {
         $targetPath = Join-Path $foundDestinationFolder $FileName
-        Copy-Item -LiteralPath $FilePath -Destination $targetPath -Force -ErrorAction Stop
-        Write-Log "✅ Скопирован файл: $FileName в $foundDestinationFolder" -Pale
+        Copy-Item -LiteralPath $FilePath -Destination $targetPath -Force -ErrorAction Stop -ProgressAction Continue
+        Write-Log "✅ Скопирован файл: $FileName в $foundDestinationFolder"
     }
     catch {
         Write-Log "❌ Ошибка при копировании файла(ов) в ${foundDestinationFolder}: $($_.Exception.Message)"
