@@ -9,6 +9,7 @@ settings:
   prefix: жат-
   ignore_prefix: жат-
   telegram_enabled: true
+  auto_update_enabled: false
 
 ffmpeg:
   ffmpeg_path: D:/scoop/shims/ffmpeg.exe

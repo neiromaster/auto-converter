@@ -53,6 +53,7 @@ try {
     $StabilizationTimeoutSec = [int]$config.stabilization_strategy.stabilization_timeout_sec
     $TelegramEnabled = [bool]::Parse($config.settings.telegram_enabled)
     $UseFileSizeStabilization = [bool]::Parse($config.stabilization_strategy.use_file_size_stabilization)
+    $AutoUpdateEnabled = [bool]::Parse($config.settings.auto_update_enabled)
 }
 catch {
     Write-Error "❌ Ошибка парсинга настроек: $_"
@@ -101,7 +102,9 @@ if (-not (Test-Path $FFmpegPath)) {
 
 
 # --- Проверка обновления ---
-Check-ForUpdates
+if ($AutoUpdateEnabled) {
+    Check-ForUpdates
+}
 
 # === Основной обработчик события ===
 $Action = {
