@@ -123,6 +123,8 @@ if (-not (Test-Path $FFmpegPath)) {
 
 . .\includes\Copy-ToDestinationFolder.ps1
 
+. .\includes\Convert-Subtitle.ps1
+
 # === Основной обработчик события ===
 $Action = {
     $FilePath = $Event.SourceEventArgs.FullPath
@@ -138,7 +140,9 @@ $Action = {
 
     if ($SubtitleExtensions -contains $Extension) {
         Write-Log "📝 Обнаружены субтитры: $FileName" -Pale
-        if ($DestinationFolder) {
+        $isSubConverted = Convert-Subtitle -SubtitleFilePath $FilePath -FFmpegPath $FFmpegPath
+
+        if ($DestinationFolder -and -not $isSubConverted) {
             $msg = Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
 
             if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
