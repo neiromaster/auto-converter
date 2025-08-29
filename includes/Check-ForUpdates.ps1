@@ -103,7 +103,7 @@ finally {
                 $UpdateScriptContent | Out-File $TempUpdaterPath -Encoding UTF8
 
                 Write-Log "🔄 Перезапуск для применения обновления..." -Pale
-                Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "$TempUpdaterPath", "-CurrentScriptPath", "$CurrentScriptPath", "-TempUpdatePath", "$TempUpdatePath"
+                Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "`"$TempUpdaterPath`"", "-CurrentScriptPath", "`"$CurrentScriptPath`"", "-TempUpdatePath", "`"$TempUpdatePath`""
                 exit
             }
             else {
