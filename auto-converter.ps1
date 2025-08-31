@@ -93,6 +93,8 @@ $IgnorePrefix = $config.settings.ignore_prefix
 $FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg.ffmpeg_path)
 $VideoExtensions = $config.video_extensions
 $SubtitleExtensions = $config.subtitle_extension
+$SubtitleExtractLanguages = $config.subtitles.extract_languages
+
 $TelegramBotToken = $telegramSecrets.TELEGRAM_BOT_TOKEN
 $TelegramChannelId = $telegramSecrets.TELEGRAM_CHANNEL_ID
 $TelegramChatId = $telegramSecrets.TELEGRAM_CHAT_ID
@@ -124,6 +126,8 @@ if (-not (Test-Path $FFmpegPath)) {
 . .\includes\Copy-ToDestinationFolder.ps1
 
 . .\includes\Convert-Subtitle.ps1
+
+. .\includes\Extract-Subtitles.ps1
 
 # === Основной обработчик события ===
 $Action = {
@@ -192,6 +196,8 @@ $Action = {
             Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
         }
     }
+
+    Extract-Subtitles -VideoFilePath $FilePath -Languages $SubtitleExtractLanguages -FFmpegPath $FFmpegPath
 
     if ($FileSizeMB -lt $MinFileSizeMB) {
         Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName" -Pale    

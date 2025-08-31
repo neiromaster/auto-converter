@@ -1,14 +1,14 @@
 paths:
-  source_folder: D:\disc\YandexDisk\sync
-  target_folder: D:\disc\YandexDisk\sync
+  source_folder: E:\projects\temp
+  target_folder: E:\projects\temp
   temp_folder: '%TEMP%'
-  destination_folder: D:\disc2\Yandex.Disk\Равки 2
+  destination_folder: E:\projects\tmp
 
 settings:
   min_file_size_mb: 800
   prefix: жат-
   ignore_prefix: жат-
-  telegram_enabled: true
+  telegram_enabled: false
   auto_update_enabled: false
 
 ffmpeg:
@@ -27,6 +27,7 @@ video_extensions:
 subtitle_extension:
   - .vtt
   - .srt
+  - .ass
 
 stabilization_strategy:
   use_file_size_stabilization: true
@@ -35,3 +36,10 @@ stabilization_strategy:
 
 logging:
   log_file: auto-converter.log
+
+subtitles:
+  extract_languages:
+    - rus
+    - eng
+    - zho
+    - chi
