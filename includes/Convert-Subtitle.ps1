@@ -20,31 +20,13 @@ function Convert-Subtitle {
         $outputFilePath = ([System.IO.Path]::ChangeExtension($SubtitleFilePath, ".srt"))
         Write-Log "🔄 Конвертируем $fileExtension в SRT: '$SubtitleFilePath' -> '$outputFilePath'" -Pale
 
-        $arguments = @(
-            "-i", "`"$SubtitleFilePath`"",
-            "`"$outputFilePath`"",
-            "-y"
-        )
+        $ffmpegOutput = & $FFmpegPath -i $SubtitleFilePath -c:s srt $outputFilePath -y 2>&1
 
-        $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = $FFmpegPath
-        $psi.Arguments = $arguments -join " "
-        $psi.RedirectStandardError = $true
-        $psi.RedirectStandardOutput = $true
-        $psi.UseShellExecute = $false
-        $psi.CreateNoWindow = $true
-
-        $proc = New-Object System.Diagnostics.Process
-        $proc.StartInfo = $psi
-        $proc.Start() | Out-Null
-        $proc.WaitForExit()
-
-        if ($proc.ExitCode -eq 0) {
+        if ($LASTEXITCODE -eq 0) {
             Write-Log "✅ Конвертация $fileExtension в SRT завершена успешно." -Pale
             return $true
         } else {
-            $errorOutput = $proc.StandardError.ReadToEnd()
-            Write-Log "❌ Ошибка при конвертации $fileExtension в SRT: $errorOutput"
+            Write-Log "❌ Ошибка при конвертации $fileExtension в SRT: $ffmpegOutput"
             return $false
         }
     }
