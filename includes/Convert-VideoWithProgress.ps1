@@ -66,6 +66,20 @@ function Convert-VideoWithProgress {
                     Write-Log "🛑 Принудительная остановка конвертации (Esc)..." -Red
                     $proc.Kill()
                     $Cancelled = $true
+
+                    # Пауза, чтобы система успела освободить файл
+                    Start-Sleep -Milliseconds 500
+
+                    if (Test-Path -LiteralPath $OutputFile) {
+                        Write-Log "🗑️ Удаление временного файла: $OutputFile" -Pale
+                        try {
+                            Remove-Item -LiteralPath $OutputFile -Force -ErrorAction Stop
+                        }
+                        catch {
+                            Write-Log "⚠️ Не удалось удалить временный файл: $OutputFile. Ошибка: $($_.Exception.Message)" -Red
+                        }
+                    }
+
                     break
                 }
             }
