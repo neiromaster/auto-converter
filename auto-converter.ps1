@@ -265,14 +265,15 @@ $Watcher.IncludeSubdirectories = $true
 $Watcher.EnableRaisingEvents = $true
 $Watcher.Filter = "*.*"
 
-$null = Register-ObjectEvent -InputObject $Watcher -EventName Created -Action $Action
+$null = Register-ObjectEvent -InputObject $Watcher -EventName Created -SourceIdentifier "FileCreated" -Action $Action
+$null = Register-ObjectEvent -InputObject $Watcher -EventName Renamed -SourceIdentifier "FileRenamed" -Action $Action
 
 try {
     while ($true) { Start-Sleep -Seconds 1 }
 }
 finally {
-    if (Get-EventSubscriber -SourceIdentifier "FileCreated" -ErrorAction SilentlyContinue) {
-        Unregister-Event -SourceIdentifier "FileCreated"
+    Get-EventSubscriber -SourceIdentifier "FileCreated", "FileRenamed" -ErrorAction SilentlyContinue | ForEach-Object {
+        Unregister-Event -SubscriptionId $_.SubscriptionId
     }
     $Watcher.Dispose()
     Write-Log "🛑 Мониторинг остановлен."
