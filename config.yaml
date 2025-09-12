@@ -10,24 +10,29 @@ settings:
   ignore_prefix: жат-
   telegram_enabled: false
   auto_update_enabled: false
+  modules:
+  - convert-subtitles
+  - extract-subtitles
+  - convert-video
+  - copy-to-destination
 
 ffmpeg:
   ffmpeg_path: D:/scoop/shims/ffmpeg.exe
 
 video_extensions:
-  - .mp4
-  - .avi
-  - .mov
-  - .wmv
-  - .flv
-  - .webm
-  - .mkv
-  - .m4v
+- .mp4
+- .avi
+- .mov
+- .wmv
+- .flv
+- .webm
+- .mkv
+- .m4v
 
 subtitle_extension:
-  - .vtt
-  - .srt
-  - .ass
+- .vtt
+- .srt
+- .ass
 
 stabilization_strategy:
   use_file_size_stabilization: true
@@ -39,7 +44,7 @@ logging:
 
 subtitles:
   extract_languages:
-    - rus
-    - eng
-    - zho
-    - chi
+  - rus
+  - eng
+  - zho
+  - chi

@@ -75,6 +75,8 @@ try {
     $TelegramEnabled = [bool]::Parse($config.settings.telegram_enabled)
     $UseFileSizeStabilization = [bool]::Parse($config.stabilization_strategy.use_file_size_stabilization)
     $AutoUpdateEnabled = [bool]::Parse($config.settings.auto_update_enabled)
+    $EnabledModules = @{}
+    $config.settings.modules | ForEach-Object { $EnabledModules[$_] = $true }
 }
 catch {
     Write-Error "❌ Ошибка парсинга настроек: $_"
@@ -143,10 +145,12 @@ $Action = {
     Write-Log "📁 Обнаружен файл: $FileName"
 
     if ($SubtitleExtensions -contains $Extension) {
-        Write-Log "📝 Обнаружены субтитры: $FileName" -Pale
-        $isSubConverted = Convert-Subtitle -SubtitleFilePath $FilePath -FFmpegPath $FFmpegPath
+        if ($EnabledModules['convert-subtitles']) {
+            Write-Log "📝 Обнаружены субтитры: $FileName" -Pale
+            $isSubConverted = Convert-Subtitle -SubtitleFilePath $FilePath -FFmpegPath $FFmpegPath
+        }
 
-        if ($DestinationFolder -and -not $isSubConverted) {
+        if ($EnabledModules['copy-to-destination'] -and $DestinationFolder -and -not $isSubConverted) {
             $msg = Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
 
             if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
@@ -188,69 +192,77 @@ $Action = {
         Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
     }
 
-    Write-Log "📤 Копирование видеофайла: $FileName"
-    if ($DestinationFolder) {
-        $msg = Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
+    if ($EnabledModules['copy-to-destination']) {
+        Write-Log "📤 Копирование видеофайла: $FileName"
+        if ($DestinationFolder) {
+            $msg = Copy-ToDestinationFolder -FilePath $FilePath -DestinationRoot $DestinationFolder
 
-        if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
-            Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+            if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
+                Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+            }
         }
     }
 
-    Extract-Subtitles -VideoFilePath $FilePath -Languages $SubtitleExtractLanguages -FFmpegPath $FFmpegPath
+    if ($EnabledModules['extract-subtitles']) {
+        Extract-Subtitles -VideoFilePath $FilePath -Languages $SubtitleExtractLanguages -FFmpegPath $FFmpegPath
+    }
 
     if ($FileSizeMB -lt $MinFileSizeMB) {
-        Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName" -Pale    
+        Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName" -Pale
         return
     }
 
-    $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath
+    if ($EnabledModules['convert-video']) {
+        $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath
 
-    if ($null -eq $strategy) {
-        Write-Log "❌ ОШИБКА: Не удалось найти видеопоток в файле."
-        return
-    }
+        if ($null -eq $strategy) {
+            Write-Log "❌ ОШИБКА: Не удалось найти видеопоток в файле."
+            return
+        }
 
-    $BaseName = [IO.Path]::GetFileNameWithoutExtension($FileName)
-    $OutputFileName = "$Prefix$BaseName.mkv"
-    $TempOutput = Join-Path $TempFolder $OutputFileName
-    $FinalOutput = Join-Path $TargetFolder $OutputFileName
+        $BaseName = [IO.Path]::GetFileNameWithoutExtension($FileName)
+        $OutputFileName = "$Prefix$BaseName.mkv"
+        $TempOutput = Join-Path $TempFolder $OutputFileName
+        $FinalOutput = Join-Path $TargetFolder $OutputFileName
 
-    try {
-        if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy -FFmpegPath $FFmpegPath) {
-            if (Test-Path -LiteralPath $TempOutput) {
-                if (Test-Path -LiteralPath $FinalOutput) { Remove-Item -LiteralPath $FinalOutput -Force }
-                Move-Item -LiteralPath $TempOutput $FinalOutput -Force
-                $FinalSizeMB = (Get-Item -LiteralPath $FinalOutput).Length / 1MB
-                Write-Log "✅✅✅ Готово: $OutputFileName ($('{0:F1}' -f $FinalSizeMB) МБ)"
+        try {
+            if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy -FFmpegPath $FFmpegPath) {
+                if (Test-Path -LiteralPath $TempOutput) {
+                    if (Test-Path -LiteralPath $FinalOutput) { Remove-Item -LiteralPath $FinalOutput -Force }
+                    Move-Item -LiteralPath $TempOutput $FinalOutput -Force
+                    $FinalSizeMB = (Get-Item -LiteralPath $FinalOutput).Length / 1MB
+                    Write-Log "✅✅✅ Готово: $OutputFileName ($('{0:F1}' -f $FinalSizeMB) МБ)"
 
-                $msg = "
+                    $msg = "
 🎬 <b>Видео обработано</b>
 
 📁 <code>$OutputFileName</code>
 📦 $("{0:F1}" -f $FinalSizeMB) МБ
 ⏱ $(Get-Date -Format 'HH:mm:ss')
-                "
-                if (-not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChannelId)) {
-                    Write-Log "⚠ Не удалось отправить сообщение в Telegram об обработке файла: $OutputFileName"
-                }
+                    "
+                    if (-not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChannelId)) {
+                        Write-Log "⚠ Не удалось отправить сообщение в Telegram об обработке файла: $OutputFileName"
+                    }
 
-                Write-Log "📤 Копирование сжатого видеофайла: $OutputFileName" -Pale
-                if ($DestinationFolder) {
-                    $msg = Copy-ToDestinationFolder -FilePath $FinalOutput -DestinationRoot $DestinationFolder
+                    if ($EnabledModules['copy-to-destination']) {
+                        Write-Log "📤 Копирование сжатого видеофайла: $OutputFileName" -Pale
+                        if ($DestinationFolder) {
+                            $msg = Copy-ToDestinationFolder -FilePath $FinalOutput -DestinationRoot $DestinationFolder
 
-                    if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
-                        Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+                            if ($msg -and -not (Send-TelegramMessage -Message $msg.Trim() -IsTelegramEnabled $TelegramEnabled -BotToken $TelegramBotToken -ChannelId $TelegramChatId)) {
+                                Write-Log "⚠ Не удалось отправить сообщение в Telegram о скачивании файла: $FileName"
+                            }
+                        }
                     }
                 }
             }
+            else {
+                Write-Log "❌❌❌ Ошибка FFmpeg: $OutputFileName"
+            }
         }
-        else {
-            Write-Log "❌❌❌ Ошибка FFmpeg: $OutputFileName"
+        catch {
+            Write-Log "❌❌❌ Ошибка: $($_.Exception.Message)"
         }
-    }
-    catch {
-        Write-Log "❌❌❌ Ошибка: $($_.Exception.Message)"
     }
 }
 
