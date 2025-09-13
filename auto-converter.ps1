@@ -91,7 +91,7 @@ if ($config.paths.destination_folder) {
     $DestinationFolder = [System.Environment]::ExpandEnvironmentVariables($config.paths.destination_folder)
 }
 $Prefix = if ($config.settings.ContainsKey('prefix')) { $config.settings.prefix } else { '' }
-$IgnorePrefix = if ($config.settings.ContainsKey('ignore_prefix')) { $config.settings.ignore_prefix } else { '' }
+$IgnorePrefix = $config.settings.ignore_prefix
 $FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg.ffmpeg_path)
 $VideoExtensions = $config.video_extensions
 $SubtitleExtensions = $config.subtitle_extension
@@ -165,7 +165,7 @@ $Action = {
         return
     }
 
-    if ($FileName -like "$IgnorePrefix*") {
+    if ($IgnorePrefix -and $FileName -like "$IgnorePrefix*") {
         Write-Log "🚫 Игнор: префикс $IgnorePrefix" -Pale
         return
     }
