@@ -90,8 +90,8 @@ $DestinationFolder = $null
 if ($config.paths.destination_folder) {
     $DestinationFolder = [System.Environment]::ExpandEnvironmentVariables($config.paths.destination_folder)
 }
-$Prefix = $config.settings.prefix
-$IgnorePrefix = $config.settings.ignore_prefix
+$Prefix = if ($config.settings.ContainsKey('prefix')) { $config.settings.prefix } else { '' }
+$IgnorePrefix = if ($config.settings.ContainsKey('ignore_prefix')) { $config.settings.ignore_prefix } else { '' }
 $FFmpegPath = [System.Environment]::ExpandEnvironmentVariables($config.ffmpeg.ffmpeg_path)
 $VideoExtensions = $config.video_extensions
 $SubtitleExtensions = $config.subtitle_extension
