@@ -186,7 +186,7 @@ $Action = {
             }
             
             if (-not $msg) {
-                if ($IgnorePrefix -and $FileName -like "$IgnorePrefix*") {
+                if ($Prefix -and $FileName -like "$Prefix*") {
                     $text = "Сжатое видео готово"
                 }
                 else {

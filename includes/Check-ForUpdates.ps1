@@ -76,11 +76,11 @@ try {
     }
 
     Write-UpdaterLog "Обновление завершено. Перезапуск скрипта..."
-    Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "`$CurrentScriptPath"
+    Start-Process pwsh.exe -ArgumentList "-NoProfile", "-File", "`"`$CurrentScriptPath`"`" 
     exit 0
 }
 catch {
-    Write-UpdaterLog "ОШИБКА ПРИМЕНЕНИЯ ОБНОВЛЕНИЯ: `$_"
+    Write-UpdaterLog "ОШИБКА ПРИМЕНЕНИЯ ОБНОВЛЕНИЯ: `$_ "
     if (Test-Path -LiteralPath `$OldScriptBackupPath -and -not (Test-Path -LiteralPath `$CurrentScriptPath)) {
         Write-UpdaterLog "Попытка отката: восстанавливаем старый скрипт из резервной копии."
         try {
@@ -88,7 +88,7 @@ catch {
             Write-UpdaterLog "Откат успешно выполнен."
         }
         catch {
-            Write-UpdaterLog "КРИТИЧЕСКАЯ ОШИБКА ОТКАТА: `$_. Возможно, потребуется ручное восстановление."
+            Write-UpdaterLog "КРИТИЧЕСКАЯ ОШИБКА ОТКАТА: `$_ . Возможно, потребуется ручное восстановление."
         }
     }
     exit 1
