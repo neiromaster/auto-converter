@@ -216,12 +216,12 @@ $Action = {
         Extract-Subtitles -VideoFilePath $FilePath -Languages $SubtitleExtractLanguages -FFmpegPath $FFmpegPath
     }
 
-    if ($FileSizeMB -lt $MinFileSizeMB) {
-        Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName" -Pale
-        return
-    }
-
     if ($EnabledModules['convert-video']) {
+        if ($FileSizeMB -lt $MinFileSizeMB) {
+            Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName" -Pale
+            return
+        }
+
         $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath
 
         if ($null -eq $strategy) {
