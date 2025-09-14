@@ -2,10 +2,10 @@
 
 function Copy-ToDestinationFolder {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$FilePath,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DestinationRoot
     )
 
@@ -29,7 +29,7 @@ function Copy-ToDestinationFolder {
     }
 
     if (-not $foundDestinationFolder) {
-        Write-Log "❌ Не найдена папка назначения для файла: $FileName" -Pale
+        Write-Log "❌ Не найдена папка назначения для файла: $FileName"
         return "❌ Не найдена папка назначения для файла: $FileName"
     }
 
