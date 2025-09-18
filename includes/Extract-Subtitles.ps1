@@ -31,24 +31,29 @@ function Extract-Subtitles {
         return
     }
 
-    $SubtitleStreams = @($FileInfo.streams | Where-Object { $_.codec_type -eq 'subtitle' })
+    $AllSubtitleStreams = @($FileInfo.streams | Where-Object { $_.codec_type -eq 'subtitle' })
 
-    if ($SubtitleStreams.Count -eq 0) {
+    if ($AllSubtitleStreams.Count -eq 0) {
         Write-Log "⏭️ Субтитры не найдены в файле: $VideoFilePath" -Pale
         return
     }
 
+    $lowerLanguages = $Languages | ForEach-Object { $_.ToLower() }
+    $MatchingStreams = @($AllSubtitleStreams | Where-Object { $_.tags -and $_.tags.language -and ($lowerLanguages -contains $_.tags.language.ToLower()) })
+
+    $StreamsToExtract = if ($MatchingStreams.Count -gt 0) {
+        $MatchingStreams
+    }
+    else {
+        Write-Log "🤔 Не найдено субтитров с указанными языками, извлекаем все доступные." -Color Yellow
+        $AllSubtitleStreams
+    }
+
     $LanguageCounts = @{}
-    foreach ($Stream in $SubtitleStreams) {
+    foreach ($Stream in $StreamsToExtract) {
         $Language = $Stream.tags.language
-
-        if (($null -eq $Language) -or ($null -eq $Languages)) {
-            continue
-        }
-
-        $lowerLanguages = $Languages | ForEach-Object { $_.ToLower() }
-        if ($Language.ToLower() -notin $lowerLanguages) {
-            continue
+        if ([string]::IsNullOrEmpty($Language)) {
+            $Language = "und" # Undetermined
         }
 
         if (-not $LanguageCounts.ContainsKey($Language)) {
