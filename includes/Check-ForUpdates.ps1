@@ -81,7 +81,7 @@ try {
 }
 catch {
     Write-UpdaterLog "ОШИБКА ПРИМЕНЕНИЯ ОБНОВЛЕНИЯ: `$_ "
-    if (Test-Path -LiteralPath `$OldScriptBackupPath -and -not (Test-Path -LiteralPath `$CurrentScriptPath)) {
+    if ((Test-Path -LiteralPath `$OldScriptBackupPath) -and -not (Test-Path -LiteralPath `$CurrentScriptPath)) {
         Write-UpdaterLog "Попытка отката: восстанавливаем старый скрипт из резервной копии."
         try {
             Rename-Item -Path `$OldScriptBackupPath -NewName `$CurrentScriptPath -Force -ErrorAction Stop
