@@ -111,7 +111,7 @@ finally {
             }
         }
         else {
-            Write-Log "🔄 Скрипт обновлён."
+            Write-Log "✅ Скрипт актуален."
             Remove-Item -Path $TempUpdatePath -ErrorAction SilentlyContinue
         }
     }
