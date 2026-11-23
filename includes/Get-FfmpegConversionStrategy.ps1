@@ -1,14 +1,16 @@
 . .\includes\Write-Log.ps1
+. .\includes\Get-VideoDimensions.ps1
 
-# === Функция: определение декодера ===
+# === Функция: определение декодера и разрешения ===
 function Get-FfmpegConversionStrategy {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string]$LocalInputFile
+        [string]$LocalInputFile,
+        [string]$FFmpegPath = "ffmpeg"
     )
 
-    $ffmpegInfo = & ffmpeg -i $LocalInputFile 2>&1
+    $ffmpegInfo = & $FFmpegPath -i $LocalInputFile 2>&1
 
     $videoStreamLine = $ffmpegInfo | Select-String -Pattern "Stream #\d+:\d+.*: Video:" | Select-Object -First 1
 
@@ -34,5 +36,21 @@ function Get-FfmpegConversionStrategy {
         Write-Log "🛠  Будет использован программный декодер." -Pale
     }
 
-    return $decoderCommand
+    $Width = $null
+    $Height = $null
+    $dims = Get-VideoDimensions -FfmpegOutput $ffmpegInfo
+    if ($dims) {
+        $Width = $dims.Width
+        $Height = $dims.Height
+        Write-Log "📐 Разрешение: $($Width)x$($Height)" -Pale
+    }
+    else {
+        Write-Log "⚠ Не удалось определить разрешение видео." -Pale
+    }
+
+    return [PSCustomObject]@{
+        DecoderCommand = $decoderCommand
+        Width = $Width
+        Height = $Height
+    }
 }
