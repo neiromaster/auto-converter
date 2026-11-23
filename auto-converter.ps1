@@ -70,6 +70,10 @@ Get-Content $EnvFile | ForEach-Object {
 # === Преобразование типов и валидация ===
 try {
     $MinFileSizeMB = [int]$config.settings.min_file_size_mb
+    $MaxResolution = 0
+    if ($config.settings.ContainsKey('max_resolution')) { $MaxResolution = [int]$config.settings.max_resolution }
+    $QP = 30
+    if ($config.settings.ContainsKey('qp')) { $QP = [int]$config.settings.qp }
     $StabilizationCheckIntervalSec = [int]$config.stabilization_strategy.stabilization_check_interval_sec
     $StabilizationTimeoutSec = [int]$config.stabilization_strategy.stabilization_timeout_sec
     $TelegramEnabled = [bool]::Parse($config.settings.telegram_enabled)
@@ -122,6 +126,10 @@ if (-not (Test-Path $FFmpegPath)) {
 . .\includes\Test-FileSizeStable.ps1
 
 . .\includes\Get-FfmpegConversionStrategy.ps1
+
+. .\includes\Get-VideoDimensions.ps1
+
+. .\includes\Get-ScaledDimensions.ps1
 
 . .\includes\Convert-VideoWithProgress.ps1
 
@@ -222,11 +230,16 @@ $Action = {
             return
         }
 
-        $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath
+        $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath -FFmpegPath $FFmpegPath
 
         if ($null -eq $strategy) {
             Write-Log "❌ ОШИБКА: Не удалось найти видеопоток в файле."
             return
+        }
+
+        $scale = Get-ScaledDimensions -Width $strategy.Width -Height $strategy.Height -MaxResolution $MaxResolution
+        if ($scale.ScaleWidth -gt 0 -and $scale.ScaleHeight -gt 0) {
+            Write-Log "📐 Разрешение $($strategy.Width)x$($strategy.Height) → $($scale.ScaleWidth)x$($scale.ScaleHeight)"
         }
 
         $BaseName = [IO.Path]::GetFileNameWithoutExtension($FileName)
@@ -235,7 +248,7 @@ $Action = {
         $FinalOutput = Join-Path $TargetFolder $OutputFileName
 
         try {
-            if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy -FFmpegPath $FFmpegPath) {
+            if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy.DecoderCommand -ScaleWidth $scale.ScaleWidth -ScaleHeight $scale.ScaleHeight -QP $QP -FFmpegPath $FFmpegPath) {
                 if (Test-Path -LiteralPath $TempOutput) {
                     if (Test-Path -LiteralPath $FinalOutput) { Remove-Item -LiteralPath $FinalOutput -Force }
                     Move-Item -LiteralPath $TempOutput $FinalOutput -Force
