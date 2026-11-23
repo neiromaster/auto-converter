@@ -13,6 +13,7 @@
 **Отклонения от спеки (сознательные):**
 - `Get-VideoDimensions` и `Get-ScaledDimensions` — отдельные файлы в `includes/` (в репо принят паттерн «одна функция — один файл», и это даёт юнит-тестирование чистых функций; спека описывала их внутри других файлов).
 - В `Convert-VideoWithProgress` добавлен guard `[System.Console]::IsInputRedirected` перед `KeyAvailable`: при перенаправленном stdin (запуск как службы, из CI, из неинтерактивной консоли) `KeyAvailable` бросает исключение, которое ломало бы конвертацию на первом же шаге цикла. Без guard невозможно прогнать интеграционный тест. На интерактивный сценарий (Esc) не влияет.
+- Условие лога масштабирования в `auto-converter.ps1` — с ОБЕИМИ проверками (`ScaleWidth -gt 0 -and ScaleHeight -gt 0`), зеркально ветке фильтра в `Convert-VideoWithProgress` (план Task 5 изначально задавал одну проверку; правка по итогам ревью Задачи 2 исключает бессмысленный лог «→ 1280x0» на вырожденных краях).
 
 **Контекст для исполнителя:**
 - Все команды PowerShell выполнять из `E:\projects\converters` (включения используют относительные пути `.\includes\...`).
@@ -27,7 +28,7 @@
 **Files:**
 - Create: `includes/Get-VideoDimensions.ps1`
 
-- [ ] **Step 1: Падающий тест**
+- [x] **Step 1: Падающий тест**
 
 Выполнить (PowerShell):
 
@@ -57,7 +58,7 @@
 
 Ожидание: ошибка `The term 'Get-VideoDimensions' is not recognized` (файла ещё нет) — тест падает, как и задумано.
 
-- [ ] **Step 2: Минимальная реализация**
+- [x] **Step 2: Минимальная реализация**
 
 Создать `includes/Get-VideoDimensions.ps1`:
 
@@ -88,11 +89,11 @@ function Get-VideoDimensions {
 
 Примечание: первый матч `\d{2,5}x\d{2,5}` в строке видеопотока — всегда разрешение (`0x31637661` не матчится: до `x` одна цифра; SAR/DAR идут после разрешения в формате `1:1`/`16:9`).
 
-- [ ] **Step 3: Тест проходит**
+- [x] **Step 3: Тест проходит**
 
 Повторить команду из Step 1. Ожидание: `PASS`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add includes/Get-VideoDimensions.ps1
@@ -106,7 +107,7 @@ git commit -m "feat(auto-converter): add Get-VideoDimensions parser for ffmpeg o
 **Files:**
 - Create: `includes/Get-ScaledDimensions.ps1`
 
-- [ ] **Step 1: Падающий тест**
+- [x] **Step 1: Падающий тест**
 
 ```powershell
 & {
@@ -132,7 +133,7 @@ git commit -m "feat(auto-converter): add Get-VideoDimensions parser for ffmpeg o
 
 Ожидание: ошибка `The term 'Get-ScaledDimensions' is not recognized`.
 
-- [ ] **Step 2: Минимальная реализация**
+- [x] **Step 2: Минимальная реализация**
 
 Создать `includes/Get-ScaledDimensions.ps1`:
 
@@ -170,11 +171,11 @@ function Get-ScaledDimensions {
 
 Примечания: параметры `$Width`/`$Height` НЕ Mandatory — при `$null` из нераспарсенных размеров `[int]$null` даст 0 и вернётся «без масштабирования» (обязательный параметр с `$null` вызвал бы интерактивный prompt в watcher'е). Округление до чётного через `Round(v/2)*2`.
 
-- [ ] **Step 3: Тест проходит**
+- [x] **Step 3: Тест проходит**
 
 Повторить команду из Step 1. Ожидание: `PASS`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add includes/Get-ScaledDimensions.ps1
@@ -189,7 +190,7 @@ git commit -m "feat(auto-converter): add Get-ScaledDimensions helper"
 - Modify: `includes/Get-FfmpegConversionStrategy.ps1` (полная замена содержимого)
 - Create (тестовые данные): `%TEMP%\vfr-test\sample-1080p.mp4` (в git не попадает)
 
-- [ ] **Step 1: Подготовка тестового видео и падающий тест**
+- [x] **Step 1: Подготовка тестового видео и падающий тест**
 
 ```powershell
 & {
@@ -208,7 +209,7 @@ git commit -m "feat(auto-converter): add Get-ScaledDimensions helper"
 
 Ожидание падения: сейчас функция возвращает строку `'-c:v h264_cuvid'`, у строки `.Width` → `$null` → `throw "FAIL: ..."`.
 
-- [ ] **Step 2: Реализация — полная замена `includes/Get-FfmpegConversionStrategy.ps1`**
+- [x] **Step 2: Реализация — полная замена `includes/Get-FfmpegConversionStrategy.ps1`**
 
 ```powershell
 . .\includes\Write-Log.ps1
@@ -269,11 +270,11 @@ function Get-FfmpegConversionStrategy {
 }
 ```
 
-- [ ] **Step 3: Тест проходит**
+- [x] **Step 3: Тест проходит**
 
 Повторить команду из Step 1 (генерация сэмпла повторно перезапишет файл — не страшно). Ожидание: `PASS`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add includes/Get-FfmpegConversionStrategy.ps1
@@ -287,7 +288,7 @@ git commit -m "refactor(auto-converter): strategy returns decoder and dimensions
 **Files:**
 - Modify: `includes/Convert-VideoWithProgress.ps1`
 
-- [ ] **Step 1: Изменить сигнатуру и построение аргументов**
+- [x] **Step 1: Изменить сигнатуру и построение аргументов**
 
 Заменить начало функции (строки 4–36: `param(...)` и оба блока `$Arguments`) на:
 
@@ -341,7 +342,7 @@ function Convert-VideoWithProgress {
 
 Важно: в строке фильтра обязательно `${ScaleWidth}`/`${ScaleHeight}` с фигурными скобками — без них PowerShell попробует разобрать `$ScaleWidth:h` как drive-qualified переменную.
 
-- [ ] **Step 2: Guard для KeyAvailable**
+- [x] **Step 2: Guard для KeyAvailable**
 
 Заменить строку 63:
 
@@ -355,7 +356,7 @@ function Convert-VideoWithProgress {
             if (-not [System.Console]::IsInputRedirected -and [System.Console]::KeyAvailable) {
 ```
 
-- [ ] **Step 3: Проверка синтаксиса**
+- [x] **Step 3: Проверка синтаксиса**
 
 ```powershell
 & {
@@ -368,7 +369,7 @@ function Convert-VideoWithProgress {
 
 Ожидание: `PASS`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add includes/Convert-VideoWithProgress.ps1
@@ -383,7 +384,7 @@ git commit -m "feat(auto-converter): scale and qp parameters in Convert-VideoWit
 - Modify: `auto-converter.ps1` (3 места: dot-source'ы, чтение конфига, call site)
 - Modify: `config.yaml`
 
-- [ ] **Step 1: Dot-source новых включений**
+- [x] **Step 1: Dot-source новых включений**
 
 После строки 124 `. .\includes\Get-FfmpegConversionStrategy.ps1` вставить:
 
@@ -396,7 +397,7 @@ git commit -m "feat(auto-converter): scale and qp parameters in Convert-VideoWit
 
 (builder.ps1 встраивает их автоматически — проверка сборки в Task 7.)
 
-- [ ] **Step 2: Чтение новых ключей конфига**
+- [x] **Step 2: Чтение новых ключей конфига**
 
 В блоке `try` (строки 71–80), после строки `$MinFileSizeMB = [int]$config.settings.min_file_size_mb`, вставить:
 
@@ -409,7 +410,7 @@ git commit -m "feat(auto-converter): scale and qp parameters in Convert-VideoWit
 
 (идиом `ContainsKey` уже используется в скрипте на строке 93 для `prefix`).
 
-- [ ] **Step 3: Call site — расчёт масштаба и передача параметров**
+- [x] **Step 3: Call site — расчёт масштаба и передача параметров**
 
 Заменить (строки 225–231):
 
@@ -450,7 +451,7 @@ git commit -m "feat(auto-converter): scale and qp parameters in Convert-VideoWit
             if (Convert-VideoWithProgress -InputFile $FilePath -OutputFile $TempOutput -DecoderCommand $strategy.DecoderCommand -ScaleWidth $scale.ScaleWidth -ScaleHeight $scale.ScaleHeight -QP $QP -FFmpegPath $FFmpegPath) {
 ```
 
-- [ ] **Step 4: config.yaml — добавить ключи в секцию `settings`**
+- [x] **Step 4: config.yaml — добавить ключи в секцию `settings`**
 
 После строки `min_file_size_mb: 800` вставить:
 
@@ -459,7 +460,7 @@ git commit -m "feat(auto-converter): scale and qp parameters in Convert-VideoWit
   qp: 30 # качество h264_nvenc (constqp); меньше — лучше и тяжелее
 ```
 
-- [ ] **Step 5: Проверка синтаксиса + YAML**
+- [x] **Step 5: Проверка синтаксиса + YAML**
 
 ```powershell
 & {
@@ -475,7 +476,7 @@ git commit -m "feat(auto-converter): scale and qp parameters in Convert-VideoWit
 
 Ожидание: `PASS`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add auto-converter.ps1 config.yaml
@@ -488,7 +489,7 @@ git commit -m "feat(auto-converter): downscale video to max_resolution from conf
 
 **Files:** только тестовые данные в `%TEMP%\vfr-test\`
 
-- [ ] **Step 1: Полный прогон трёх сценариев через изменённые функции**
+- [x] **Step 1: Полный прогон трёх сценариев через изменённые функции**
 
 ```powershell
 & {
@@ -540,7 +541,7 @@ git commit -m "feat(auto-converter): downscale video to max_resolution from conf
 
 Ожидание: `OK sample-1080p.mp4 -> 1280x720`, `OK sample-portrait.mp4 -> 720x1280`, `OK sample-720p.mp4 -> 1280x720`, `PASS`. Прогресс-бар `Write-Progress` в неинтерактивной консоли безопасен; Esc-ветка отключена guard'ом из Task 4.
 
-- [ ] **Step 2: Очистка тестовых данных**
+- [x] **Step 2: Очистка тестовых данных**
 
 ```powershell
 Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
@@ -554,7 +555,7 @@ Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
 - Modify: `README.md`
 - Modify: `docs/README_ru.md`
 
-- [ ] **Step 1: README.md — пример конфига**
+- [x] **Step 1: README.md — пример конфига**
 
 В yaml-блоке (строки 50–55), после `min_file_size_mb: 800` вставить:
 
@@ -563,7 +564,7 @@ Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
   qp: 30 # h264_nvenc quality (constqp); lower = better quality, bigger files
 ```
 
-- [ ] **Step 2: README.md — Features**
+- [x] **Step 2: README.md — Features**
 
 После пункта `- **FFmpeg Integration**: ...` (строка 27) вставить:
 
@@ -571,7 +572,7 @@ Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
 - **Resolution Downscaling**: Videos whose long side exceeds `max_resolution` are proportionally downscaled to it (e.g., 1920x1080 → 1280x720, vertical 1080x1920 → 720x1280). Set `max_resolution: 0` to disable.
 ```
 
-- [ ] **Step 3: docs/README_ru.md — пример конфига**
+- [x] **Step 3: docs/README_ru.md — пример конфига**
 
 После строки `min_file_size_mb: 800` вставить:
 
@@ -580,7 +581,7 @@ Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
   qp: 30 # качество h264_nvenc (constqp); меньше — лучше качество, больше файл
 ```
 
-- [ ] **Step 4: docs/README_ru.md — Возможности**
+- [x] **Step 4: docs/README_ru.md — Возможности**
 
 После пункта `- **FFmpeg Integration**: ...` вставить:
 
@@ -588,7 +589,7 @@ Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
 - **Уменьшение разрешения**: Видео, у которых длинная сторона больше `max_resolution`, пропорционально уменьшается до него (например, 1920x1080 → 1280x720, вертикальное 1080x1920 → 720x1280). Значение `0` отключает уменьшение.
 ```
 
-- [ ] **Step 5: Проверка сборки builder.ps1**
+- [x] **Step 5: Проверка сборки builder.ps1**
 
 ```powershell
 & {
@@ -605,7 +606,7 @@ Remove-Item -Recurse -Force "$env:TEMP\vfr-test"
 
 Ожидание: вывод builder'а со строками «Встраиваю: .../Get-VideoDimensions.ps1» и «.../Get-ScaledDimensions.ps1», затем `PASS`. Собранный `dist/auto-converter.ps1` не коммитится, если он не в git (проверить `git status` — файл `dist/` если закоммичен, оставить как есть: обновить коммитом `chore(dist): rebuild` только если dist уже отслеживается).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md docs/README_ru.md
