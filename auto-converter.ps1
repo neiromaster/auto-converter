@@ -284,9 +284,7 @@ try {
     while ($true) { Start-Sleep -Seconds 1 }
 }
 finally {
-    Get-EventSubscriber -SourceIdentifier "FileCreated", "FileRenamed" -ErrorAction SilentlyContinue | ForEach-Object {
-        Unregister-Event -SubscriptionId $_.SubscriptionId
-    }
+    Get-EventSubscriber | Where-Object { $_.SourceIdentifier -in 'FileCreated', 'FileRenamed' } | Unregister-Event
     $Watcher.Dispose()
     Write-Log "🛑 Мониторинг остановлен."
 }
