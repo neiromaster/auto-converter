@@ -6,6 +6,9 @@ function Convert-VideoWithProgress {
         [string]$InputFile,
         [string]$OutputFile,
         [string]$DecoderCommand = $null,
+        [int]$ScaleWidth = 0,
+        [int]$ScaleHeight = 0,
+        [int]$QP = 30,
         [string]$FFmpegPath
     )
 
@@ -18,14 +21,21 @@ function Convert-VideoWithProgress {
         $Arguments += $DecoderCommand.Split(" ")
     }
 
+    if ($ScaleWidth -gt 0 -and $ScaleHeight -gt 0) {
+        $scaleFilter = "scale_cuda=w=${ScaleWidth}:h=${ScaleHeight}:format=nv12"
+    }
+    else {
+        $scaleFilter = "scale_cuda=format=nv12"
+    }
+
     $Arguments += @(
         "-i", "`"$InputFile`"",
         "-map", "0:v:0", "-map", "0:a:0",
-        "-vf", "`"scale_cuda=format=nv12`"",
+        "-vf", "`"$scaleFilter`"",
         "-c:v", "h264_nvenc",
         "-preset", "p5",
         "-rc", "constqp",
-        "-qp", "32",
+        "-qp", "$QP",
         "-c:a", "aac",
         "-b:a", "128k",
         "-sn",
@@ -60,7 +70,7 @@ function Convert-VideoWithProgress {
         $errorBuffer = New-Object System.IO.StreamReader($errorReader)
 
         while (-not $proc.HasExited) {
-            if ([System.Console]::KeyAvailable) {
+            if (-not [System.Console]::IsInputRedirected -and [System.Console]::KeyAvailable) {
                 $key = [System.Console]::ReadKey($true)
                 if ($key.Key -eq [System.ConsoleKey]::Escape) {
                     Write-Log "🛑 Принудительная остановка конвертации (Esc)..." -Red
