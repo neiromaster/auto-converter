@@ -6,6 +6,8 @@ paths:
 
 settings:
   min_file_size_mb: 800
+  max_resolution: 1280 # длинная сторона > этого значения → уменьшение до него; 0 — без изменения разрешения
+  qp: 30 # качество h264_nvenc (constqp); меньше — лучше качество, больше файл
   prefix: жат-
   ignore_prefix: жат-
   telegram_enabled: false
