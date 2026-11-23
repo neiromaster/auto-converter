@@ -71,9 +71,9 @@ Get-Content $EnvFile | ForEach-Object {
 try {
     $MinFileSizeMB = [int]$config.settings.min_file_size_mb
     $MaxResolution = 0
-    if ($config.settings.ContainsKey('max_resolution')) { $MaxResolution = [int]$config.settings.max_resolution }
+    if ($null -ne $config.settings.max_resolution) { $MaxResolution = [int]$config.settings.max_resolution }
     $QP = 30
-    if ($config.settings.ContainsKey('qp')) { $QP = [int]$config.settings.qp }
+    if ($null -ne $config.settings.qp) { $QP = [int]$config.settings.qp }
     $StabilizationCheckIntervalSec = [int]$config.stabilization_strategy.stabilization_check_interval_sec
     $StabilizationTimeoutSec = [int]$config.stabilization_strategy.stabilization_timeout_sec
     $TelegramEnabled = [bool]::Parse($config.settings.telegram_enabled)
