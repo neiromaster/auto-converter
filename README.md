@@ -51,7 +51,7 @@ paths:
 settings:
   min_file_size_mb: 800
   max_resolution: 1280 # long side > this value is downscaled to it; 0 disables resizing
-  qp: 30 # h264_nvenc quality (constqp); lower = better quality, bigger files
+  qp: 30 # h264_nvenc quality (constqp); lower = better quality, bigger files; defaults to 30 if omitted
   prefix: жат-
   ignore_prefix: жат-
   telegram_enabled: true
@@ -122,7 +122,7 @@ The script will start monitoring the `SOURCE_FOLDER`. To stop the script, press 
 5. **File Stabilization**: For video files, it continuously checks the file size until it stabilizes, ensuring the file is fully downloaded/copied.
 6. **Smart Copying (Pre-conversion)**: If `destination_folder` is set, the script searches for a subfolder within it whose name partially matches the new video file's name. It then copies the original video file to that subfolder.
 7. **Subtitle Extraction**: If a video has subtitle tracks with languages specified in `subtitles.extract_languages`, they will be extracted as `.srt` files.
-8. **FFmpeg Conversion**: Once a video file is detected and stable, it uses FFmpeg to convert it. It attempts to use `cuvid` for decoding and `h264_nvenc` for encoding if an NVIDIA GPU is present.
+8. **FFmpeg Conversion**: Once a video file is detected and stable, it uses FFmpeg to convert it. It attempts to use `cuvid` for decoding and `h264_nvenc` for encoding if an NVIDIA GPU is present. Videos with a long side larger than `max_resolution` are proportionally downscaled to it before encoding.
 - **Moves to Target**: After successful conversion, the new file is moved to the `TARGET_FOLDER`.
 - **Smart Copying (Post-conversion)**: The newly converted file is also copied to the same matched subfolder within `destination_folder`.
 - **Logging & Notifications**: Logs all significant events. Sends notifications to `TELEGRAM_CHANNEL_ID` about downloads and conversions, and to `TELEGRAM_CHAT_ID` about the results of copy operations.
