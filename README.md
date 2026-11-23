@@ -6,6 +6,7 @@ This PowerShell script automatically monitors a specified source folder for new 
 
 - **Automatic Monitoring**: Watches a source directory for newly created video files.
 - **FFmpeg Integration**: Utilizes FFmpeg for robust video conversion.
+- **Resolution Downscaling**: Videos whose long side exceeds `max_resolution` are proportionally downscaled to it (e.g., 1920x1080 → 1280x720, vertical 1080x1920 → 720x1280). Set `max_resolution: 0` to disable.
 - **CUDA Acceleration**: Leverages NVIDIA GPUs for faster encoding (H.264 NVENC).
 - **Subtitle Management**: Automatically extracts subtitle tracks from video files for specified languages. It also converts standalone subtitle files (e.g., `.ass`, `.vtt`) to the standard `.srt` format.
 - **File Size Stabilization**: Waits for files to be fully written before starting conversion, preventing issues with incomplete downloads.
@@ -49,6 +50,8 @@ paths:
 
 settings:
   min_file_size_mb: 800
+  max_resolution: 1280 # long side > this value is downscaled to it; 0 disables resizing
+  qp: 30 # h264_nvenc quality (constqp); lower = better quality, bigger files
   prefix: жат-
   ignore_prefix: жат-
   telegram_enabled: true
