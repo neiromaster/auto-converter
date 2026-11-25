@@ -131,6 +131,8 @@ if (-not (Test-Path $FFmpegPath)) {
 
 . .\includes\Get-ScaledDimensions.ps1
 
+. .\includes\Test-ConversionNeeded.ps1
+
 . .\includes\Convert-VideoWithProgress.ps1
 
 . .\includes\Copy-ToDestinationFolder.ps1
@@ -225,11 +227,6 @@ $Action = {
     }
 
     if ($EnabledModules['convert-video']) {
-        if ($FileSizeMB -lt $MinFileSizeMB) {
-            Write-Log "📉 Маленький файл ($('{0:F1}' -f $FileSizeMB) МБ): $FileName" -Pale
-            return
-        }
-
         $strategy = Get-FfmpegConversionStrategy -LocalInputFile $FilePath -FFmpegPath $FFmpegPath
 
         if ($null -eq $strategy) {
@@ -240,6 +237,11 @@ $Action = {
         $scale = Get-ScaledDimensions -Width $strategy.Width -Height $strategy.Height -MaxResolution $MaxResolution
         if ($scale.ScaleWidth -gt 0 -and $scale.ScaleHeight -gt 0) {
             Write-Log "📐 Разрешение $($strategy.Width)x$($strategy.Height) → $($scale.ScaleWidth)x$($scale.ScaleHeight)"
+        }
+
+        if (-not (Test-ConversionNeeded -FileSizeMB $FileSizeMB -MinFileSizeMB $MinFileSizeMB -ScaleWidth $scale.ScaleWidth -ScaleHeight $scale.ScaleHeight)) {
+            Write-Log "📉 Пропуск: $('{0:F1}' -f $FileSizeMB) МБ, разрешение не выше ${MaxResolution}: $FileName" -Pale
+            return
         }
 
         $BaseName = [IO.Path]::GetFileNameWithoutExtension($FileName)
