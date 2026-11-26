@@ -143,6 +143,8 @@ if (-not (Test-Path $FFmpegPath)) {
 
 # === Основной обработчик события ===
 $Action = {
+    trap { Write-Log "❌ Ошибка обработчика: $($_.Exception.Message)"; break }
+
     $FilePath = $Event.SourceEventArgs.FullPath
     $FileName = $Event.SourceEventArgs.Name
     $Extension = [IO.Path]::GetExtension($FileName).ToLower()
@@ -272,6 +274,20 @@ $Action = {
 # === Запуск мониторинга ===
 Write-Log "✅ Мониторинг запущен: $SourceFolder"
 Write-Log "Нажмите Ctrl+C для остановки."
+
+# === Обработчики событий видят только глобальную область: публикуем в неё функции скрипта и настройки обработчика ===
+$scriptRootPrefix = $PSScriptRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+Get-ChildItem function: | Where-Object {
+    ($_.ScriptBlock.File -eq $PSCommandPath -or ($_.ScriptBlock.File -and $_.ScriptBlock.File.StartsWith($scriptRootPrefix, [StringComparison]::OrdinalIgnoreCase))) -and
+    -not [object]::ReferenceEquals($_.ScriptBlock, (Get-Item "function:global:$($_.Name)" -ErrorAction SilentlyContinue).ScriptBlock)
+} | ForEach-Object {
+    Set-Item -Path "function:global:$($_.Name)" -Value $_.ScriptBlock
+}
+foreach ($name in 'LogFile', 'EnabledModules', 'UseFileSizeStabilization', 'StabilizationCheckIntervalSec', 'StabilizationTimeoutSec',
+    'SubtitleExtensions', 'SubtitleExtractLanguages', 'VideoExtensions', 'FFmpegPath', 'Prefix', 'IgnorePrefix', 'DestinationFolder',
+    'TargetFolder', 'TempFolder', 'MinFileSizeMB', 'MaxResolution', 'QP', 'TelegramEnabled', 'TelegramBotToken', 'TelegramChatId', 'TelegramChannelId') {
+    Set-Variable -Name $name -Scope Global -Value (Get-Variable -Name $name -ValueOnly) -Force
+}
 
 $Watcher = New-Object IO.FileSystemWatcher
 $Watcher.Path = $SourceFolder

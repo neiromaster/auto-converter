@@ -1,37 +1,4 @@
 # === Логирование ===
-function Initialize-LogConsolePump {
-    if ($global:LogConsoleQueue) { return $true }
-
-    try {
-        $global:LogConsoleQueue = New-Object System.Collections.Concurrent.ConcurrentQueue[object]
-        $runspace = [runspacefactory]::CreateRunspace()
-        $runspace.Open()
-        $pump = [powershell]::Create()
-        $pump.Runspace = $runspace
-        [void]$pump.AddScript({
-            param($queue)
-            $item = $null
-            while ($true) {
-                while ($queue.TryDequeue([ref]$item)) {
-                    try {
-                        if ($item.Pale) { [Console]::ForegroundColor = [ConsoleColor]::DarkGray }
-                        [Console]::WriteLine($item.Message)
-                        if ($item.Pale) { [Console]::ResetColor() }
-                    }
-                    catch { }
-                }
-                Start-Sleep -Milliseconds 100
-            }
-        }).AddArgument($global:LogConsoleQueue)
-        $global:LogConsolePump = $pump
-        [void]$pump.BeginInvoke()
-        return $true
-    }
-    catch {
-        return $false
-    }
-}
-
 function Write-Log {
     param(
         [string]$Message,
@@ -45,11 +12,9 @@ function Write-Log {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         "$timestamp | $Message" | Out-File -FilePath $LogFile -Append -Encoding UTF8
     }
-    if (Initialize-LogConsolePump) {
-        $global:LogConsoleQueue.Enqueue([pscustomobject]@{ Message = $Message; Pale = [bool]$Pale })
-    }
-    else {
-        if ($Pale) { Write-Host $Message -ForegroundColor DarkGray }
-        else { Write-Host $Message }
+    if ($Pale) {
+        Write-Host $Message -ForegroundColor DarkGray
+    } else {
+        Write-Host $Message
     }
 }
