@@ -13,8 +13,12 @@ function Initialize-LogConsolePump {
             $item = $null
             while ($true) {
                 while ($queue.TryDequeue([ref]$item)) {
-                    if ($item.Pale) { Write-Host $item.Message -ForegroundColor DarkGray }
-                    else { Write-Host $item.Message }
+                    try {
+                        if ($item.Pale) { [Console]::ForegroundColor = [ConsoleColor]::DarkGray }
+                        [Console]::WriteLine($item.Message)
+                        if ($item.Pale) { [Console]::ResetColor() }
+                    }
+                    catch { }
                 }
                 Start-Sleep -Milliseconds 100
             }
